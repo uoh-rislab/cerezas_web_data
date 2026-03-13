@@ -40,7 +40,7 @@ def fetch_and_save_by_field_id_and_date():
 
     # === Rango de fechas ISO 8601 (UTC) ===
     current_year = datetime.utcnow().year
-    start_ts = f"{current_year}-05-01T04:00:00Z" #2025-05-01
+    start_ts = f"{current_year}-03-01T04:00:00Z" #2025-05-01
 
     today = datetime.now(timezone.utc).date()
     end_dt = datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc).replace(hour=3, minute=59, second=59)
