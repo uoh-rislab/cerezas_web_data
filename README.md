@@ -151,6 +151,9 @@ La imagen incluye `sh`; Bash no es necesario para operar o diagnosticar el servi
 
 ## Validación en el servidor
 
+El procedimiento completo de instalación, pruebas, activación y troubleshooting está disponible
+en [docs/server-deployment.md](docs/server-deployment.md).
+
 Antes de activar el scheduler en producción:
 
 ```bash

@@ -23,5 +23,5 @@ VOLUME ["/data"]
 HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 \
   CMD ["cerezas-pipeline", "health"]
 
-CMD ["cerezas-pipeline", "schedule"]
-
+ENTRYPOINT ["cerezas-pipeline"]
+CMD ["schedule"]
