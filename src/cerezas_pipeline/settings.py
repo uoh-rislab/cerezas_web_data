@@ -39,6 +39,10 @@ class Settings:
     excluded_device_patterns: tuple[re.Pattern[str], ...]
     schedule_hour: int
     schedule_minute: int
+    schedule_start_month: int
+    schedule_start_day: int
+    schedule_end_month: int
+    schedule_end_day: int
     season_start_month: int
     season_start_day: int
     catchup_days: int
@@ -99,6 +103,10 @@ def load_settings(config_dir: Optional[Union[str, Path]] = None) -> Settings:
         ),
         schedule_hour=int(pipeline["schedule_hour"]),
         schedule_minute=int(pipeline["schedule_minute"]),
+        schedule_start_month=int(pipeline["schedule_start_month"]),
+        schedule_start_day=int(pipeline["schedule_start_day"]),
+        schedule_end_month=int(pipeline["schedule_end_month"]),
+        schedule_end_day=int(pipeline["schedule_end_day"]),
         season_start_month=int(pipeline["season_start_month"]),
         season_start_day=int(pipeline["season_start_day"]),
         catchup_days=int(pipeline.get("catchup_days", 7)),

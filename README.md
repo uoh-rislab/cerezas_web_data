@@ -8,8 +8,9 @@ validar resultados. Este repositorio contiene la nueva implementación desplegab
 
 ## Programación
 
-El servicio permanece activo y evalúa la agenda todos los días. La hora de ejecución es
-siempre **01:30 UTC-4 fijo**, equivalente a `05:30 UTC`.
+El servicio permanece activo todo el año, pero solamente despacha ejecuciones entre el **2 de mayo**
+y el **1 de noviembre**, ambas fechas inclusive. La hora de ejecución es siempre **01:30 UTC-4 fijo**,
+equivalente a `05:30 UTC`.
 
 | Día | Ejecución |
 |---|---|
@@ -17,10 +18,15 @@ siempre **01:30 UTC-4 fijo**, equivalente a `05:30 UTC`.
 | Martes a domingo | daily |
 | Día 1 de cada mes | monthly adicional a daily o weekly |
 
+- Fuera del 2 de mayo al 1 de noviembre no se generan ejecuciones automáticas.
 - Daily y weekly procesan desde el 1 de mayo hasta el día anterior.
 - Monthly procesa el mes calendario inmediatamente anterior.
 - Si el contenedor no estaba disponible a la hora programada, recupera las ejecuciones
   pendientes dentro de la ventana configurada.
+
+La última ejecución automática ocurre el 1 de noviembre: procesa datos hasta el 31 de octubre y
+genera el monthly de octubre, además del daily o weekly correspondiente a ese día. Los comandos
+manuales continúan disponibles fuera de temporada.
 
 ## Flujo
 

@@ -7,7 +7,13 @@ from datetime import date, datetime, time as datetime_time, timedelta
 from pathlib import Path
 from typing import Optional
 
-from .dates import FIXED_CHILE_TZ, RunKind, fixed_now, kinds_for_scheduled_date
+from .dates import (
+    FIXED_CHILE_TZ,
+    RunKind,
+    fixed_now,
+    is_in_schedule_window,
+    kinds_for_scheduled_date,
+)
 from .pipeline import run_pipeline
 from .settings import Settings
 
@@ -74,6 +80,14 @@ class SchedulerState:
 
 
 def due_dates(settings: Settings, state: SchedulerState, now: datetime) -> list[date]:
+    if not is_in_schedule_window(
+        now.date(),
+        settings.schedule_start_month,
+        settings.schedule_start_day,
+        settings.schedule_end_month,
+        settings.schedule_end_day,
+    ):
+        return []
     last_seen = state.get("last_seen")
     if last_seen:
         first = max(date.fromisoformat(last_seen), now.date() - timedelta(days=settings.catchup_days))
@@ -99,7 +113,13 @@ def run_scheduler(settings: Settings, poll_seconds: int = 30) -> None:
     while True:
         now = fixed_now()
         for scheduled_date in due_dates(settings, state, now):
-            for kind in kinds_for_scheduled_date(scheduled_date):
+            for kind in kinds_for_scheduled_date(
+                scheduled_date,
+                settings.schedule_start_month,
+                settings.schedule_start_day,
+                settings.schedule_end_month,
+                settings.schedule_end_day,
+            ):
                 if not state.should_run(scheduled_date, kind, settings.retry_minutes, now):
                     continue
                 LOGGER.info("Iniciando %s para fecha programada %s", kind.value, scheduled_date)

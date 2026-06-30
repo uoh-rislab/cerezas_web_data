@@ -20,9 +20,21 @@ class ScheduleTests(unittest.TestCase):
 
     def test_first_day_monday_adds_monthly_without_replacing_weekly(self):
         self.assertEqual(
-            kinds_for_scheduled_date(date(2027, 2, 1)),
+            kinds_for_scheduled_date(date(2026, 6, 1)),
             [RunKind.WEEKLY, RunKind.MONTHLY],
         )
+
+    def test_schedule_starts_on_may_second(self):
+        self.assertEqual(kinds_for_scheduled_date(date(2026, 5, 1)), [])
+        self.assertEqual(kinds_for_scheduled_date(date(2026, 5, 2)), [RunKind.DAILY])
+
+    def test_schedule_ends_on_november_first(self):
+        self.assertEqual(kinds_for_scheduled_date(date(2026, 10, 31)), [RunKind.DAILY])
+        self.assertEqual(
+            kinds_for_scheduled_date(date(2026, 11, 1)),
+            [RunKind.DAILY, RunKind.MONTHLY],
+        )
+        self.assertEqual(kinds_for_scheduled_date(date(2026, 11, 2)), [])
 
 
 class WindowTests(unittest.TestCase):
@@ -41,4 +53,3 @@ class WindowTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

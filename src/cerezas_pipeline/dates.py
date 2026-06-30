@@ -27,8 +27,28 @@ class RunWindow:
         return f"{self.kind.value}-{self.report_date.isoformat()}"
 
 
-def kinds_for_scheduled_date(day: date) -> list[RunKind]:
-    """El día 1 agrega monthly; lunes=weekly; martes-domingo=daily."""
+def is_in_schedule_window(
+    day: date,
+    start_month: int = 5,
+    start_day: int = 2,
+    end_month: int = 11,
+    end_day: int = 1,
+) -> bool:
+    start = date(day.year, start_month, start_day)
+    end = date(day.year, end_month, end_day)
+    return start <= day <= end
+
+
+def kinds_for_scheduled_date(
+    day: date,
+    start_month: int = 5,
+    start_day: int = 2,
+    end_month: int = 11,
+    end_day: int = 1,
+) -> list[RunKind]:
+    """Return no jobs outside the schedule window; otherwise apply daily/weekly/monthly rules."""
+    if not is_in_schedule_window(day, start_month, start_day, end_month, end_day):
+        return []
     kinds = [RunKind.WEEKLY if day.weekday() == 0 else RunKind.DAILY]
     if day.day == 1:
         kinds.append(RunKind.MONTHLY)
