@@ -60,7 +60,7 @@ Los resultados persisten en:
 - `config/pipeline.yaml`: MongoDB, horario, modelos y filtros de sensores.
 - `config/sites.yaml`: beneficiarios, grupo FIC, ciudad y nombres de salida.
 - `config/stations.yaml`: coordenadas usadas para Meteostat.
-- `config/assets/`: logos y metadata originales requeridos para reproducir los PDF fielmente.
+- Los logos originales se versionan en `assets/` y se incorporan automáticamente a la imagen.
 
 Locations y filtros están desacoplados del procesamiento. Los filtros aceptan IDs exactos o
 expresiones regulares en `sensor_filters`, por lo que no se requiere cambiar código para excluir
@@ -127,9 +127,8 @@ docker compose up -d
 docker compose logs -f climate-reporting
 ```
 
-Antes del build, copiar los assets originales desde el computador local al servidor siguiendo
-[docs/server-deployment.md](docs/server-deployment.md). También se debe configurar
-`MAPBOX_ACCESS_TOKEN` en `.env`; el mapa satelital original depende de ese token.
+Se debe configurar `MAPBOX_ACCESS_TOKEN` en `.env`; el mapa satelital original depende de ese
+token. Actualizar `.env.example` no modifica un `.env` real creado anteriormente.
 
 Las rutas del host se configuran en `.env`:
 

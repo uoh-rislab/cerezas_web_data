@@ -67,23 +67,8 @@ En la primera instalación:
 cp -a config/. /home/uoh/cerezas_web_server/config/climate-reporting/
 ```
 
-Los boletines originales dependen de logos y metadata que viven en el repositorio histórico
-`reporteria/ClimateProcessing/assets`. Desde el computador local, copiarlos al servidor:
-
-```bash
-scp -r \
-  -J ibugueno@172.16.105.104 \
-  /Users/ignacio/tmp/fic/reporteria/ClimateProcessing/assets/. \
-  uoh@172.16.0.76:/home/uoh/cerezas_web_server/config/climate-reporting/assets/
-```
-
-En el servidor, verificar:
-
-```bash
-find /home/uoh/cerezas_web_server/config/climate-reporting/assets -maxdepth 2 -type f | sort
-```
-
-Deben existir al menos `logo_fic.png`, `site_metadata.yaml` y el directorio `logos/`.
+Los logos originales están versionados en `assets/fic-report-assets.zip.b64`. El build los valida,
+descomprime y copia dentro de `/app/assets`; no es necesario transferirlos manualmente.
 
 En actualizaciones posteriores, comparar antes de reemplazar configuración local:
 
@@ -120,7 +105,8 @@ MAPBOX_ACCESS_TOKEN='REPLACE_WITH_ORIGINAL_MAPBOX_PUBLIC_TOKEN'
 
 Las comillas simples protegen caracteres como `$` y `#`. La credencial que estuvo versionada debe
 rotarse antes del despliegue. El token Mapbox debe corresponder al utilizado por el generador
-original; es necesario para reproducir el mapa satelital.
+original; es necesario para reproducir el mapa satelital. Si `.env` fue creado antes de que esta
+variable apareciera en `.env.example`, se debe agregar manualmente: Git nunca sobrescribe `.env`.
 
 Proteger archivos y directorios:
 
