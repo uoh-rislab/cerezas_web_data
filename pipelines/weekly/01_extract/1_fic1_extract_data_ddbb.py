@@ -10,7 +10,6 @@ import os
 import json
 from datetime import datetime, timedelta, timezone
 
-
 def fetch_and_save_by_field_id_and_date():
     user       = os.environ.get("MONGO_USER", "uoh_cerezas")
     password   = os.environ["MONGO_PASSWORD"]
@@ -39,8 +38,12 @@ def fetch_and_save_by_field_id_and_date():
     ]
 
     # === Rango de fechas ISO 8601 (UTC) ===
+    #start_ts = "2025-05-01T04:00:00Z"
+    #end_ts   = "2025-07-14T03:59:59Z"
+
+    # === Rango de fechas ISO 8601 (UTC) ===
     current_year = datetime.utcnow().year
-    start_ts = f"{current_year}-05-01T04:00:00Z"
+    start_ts = f"{current_year}-05-01T04:00:00Z" #2025-05-01
 
     today = datetime.now(timezone.utc).date()
     end_dt = datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc).replace(hour=3, minute=59, second=59)
@@ -65,9 +68,8 @@ def fetch_and_save_by_field_id_and_date():
             print(f"{coll_name}: {len(docs)} documentos encontrados para field_id {field_id}")
 
         yesterday_str = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
-        
         os.makedirs(f"output/data_{yesterday_str}/results", exist_ok=True)
-        output_path = os.path.join(f"output/data_{yesterday_str}/results", f"daily_{yesterday_str}_{field_id}.txt") #nombre del archivo con la fecha del ultimo dia
+        output_path = os.path.join(f"output/data_{yesterday_str}/results", f"weekly_{yesterday_str}_{field_id}.txt") #nombre del archivo con la fecha del ultimo dia
 
         with open(output_path, "w", encoding="utf-8") as f:
             for doc in all_docs:

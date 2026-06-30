@@ -1,0 +1,7 @@
+stations:
+  graneros: {name: "Graneros, Mostazal", latitude: -34.065833, longitude: -70.741666}
+  peumo: {name: "La Rosa", latitude: -34.326943, longitude: -71.258888}
+  rengo: {name: "Rengo Essbio", latitude: -34.406944, longitude: -70.860277}
+  requinoa: {name: "Totihue", latitude: -34.322499, longitude: -70.823054}
+  sanfernando: {name: "San Fernando Liceo Agrícola", latitude: -34.591388, longitude: -70.970554}
+

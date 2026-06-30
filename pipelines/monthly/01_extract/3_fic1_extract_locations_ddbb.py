@@ -44,6 +44,8 @@ def fetch_and_save_sensor_locations():
         "uoh-cerezos-soil"
     ]
 
+    os.makedirs("results", exist_ok=True)
+
     for field_id in field_ids:
         unique_sensors = {}
         

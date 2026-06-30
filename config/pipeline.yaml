@@ -1,0 +1,35 @@
+schedule_hour: 1
+schedule_minute: 30
+season_start_month: 5
+season_start_day: 1
+catchup_days: 7
+retry_minutes: 15
+
+mongo:
+  host: 127.0.0.1
+  port: 27017
+  auth_database: admin
+  database: FIC_CEREZAS
+  fic1_collections:
+    - uoh-cerezos-ambiente
+    - uoh-cerezos-leaf
+    - uoh-cerezos-soil
+  fic2_collection_prefix: fic2
+
+paths:
+  data_root: /data
+
+sensor_models:
+  "LSN50v2-S31 - Temperature & Humidity Sensor": "Sensor T°-H"
+  "LSE01 - Soil Moisture & EC Sensor": "Sensor Soil"
+  "LSPH01 - Soil pH Sensor": "Sensor pH"
+  "LLMS01 - Leaf Moisture Sensor": "Sensor Leaf"
+
+# Se pueden agregar IDs o expresiones regulares sin cambiar el código.
+sensor_filters:
+  excluded_device_ids: []
+  excluded_device_patterns: []
+
+email:
+  enabled: false
+  recipients: []

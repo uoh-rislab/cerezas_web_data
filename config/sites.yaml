@@ -1,0 +1,74 @@
+sites:
+  fic1-rengo-agritorre:
+    group: fic1
+    city: rengo
+    name: "Agrícola La Torre S.A."
+    filename: "Agrícola La Torre"
+    location: "La Chimba, Rengo"
+  fic1-rengo-ceaf:
+    group: fic1
+    city: rengo
+    name: "CEAF - Centro de Estudios Avanzados en Fruticultura"
+    filename: "CEAF"
+    location: "Rengo"
+  fic1-requinoa-requiagro:
+    group: fic1
+    city: requinoa
+    name: "RequiAgro"
+    filename: "RequiAgro"
+    location: "Requinoa"
+  fic1-graneros-agrofurore:
+    group: fic1
+    city: graneros
+    name: "Agrícola Furore Limitada"
+    filename: "Agrícola Furore"
+    location: "Graneros"
+  fic2-graneros-agrofurore:
+    group: fic2
+    city: graneros
+    name: "Agrícola Furore Limitada"
+    filename: "Agrícola Furore"
+    location: "Graneros"
+  fic2-peumo-greenex:
+    group: fic2
+    city: peumo
+    name: "Greenex SpA"
+    filename: "Greenex"
+    location: "Peumo"
+  fic2-rengo-agricura:
+    group: fic2
+    city: rengo
+    name: "Agricura"
+    filename: "Agricura"
+    location: "Rengo"
+  fic2-rengo-agritorre:
+    group: fic2
+    city: rengo
+    name: "Agrícola La Torre S.A."
+    filename: "Agrícola La Torre"
+    location: "La Chimba, Rengo"
+  fic2-rengo-donajaviera:
+    group: fic2
+    city: rengo
+    name: "Doña Javiera SpA"
+    filename: "Doña Javiera"
+    location: "Rengo"
+  fic2-rengo-elperal:
+    group: fic2
+    city: rengo
+    name: "Fundo Rucanahue"
+    filename: "Fundo Rucanahue"
+    location: "La Esmeralda, Rengo"
+  fic2-rengo-eltotoral:
+    group: fic2
+    city: rengo
+    name: "El Totoral"
+    filename: "El Totoral"
+    location: "Rengo"
+  fic2-sanfernando-liceoagricola:
+    group: fic2
+    city: sanfernando
+    name: "Liceo Agrícola El Carmen"
+    filename: "Liceo Agrícola El Carmen"
+    location: "San Fernando"
+
