@@ -67,6 +67,24 @@ En la primera instalación:
 cp -a config/. /home/uoh/cerezas_web_server/config/climate-reporting/
 ```
 
+Los boletines originales dependen de logos y metadata que viven en el repositorio histórico
+`reporteria/ClimateProcessing/assets`. Desde el computador local, copiarlos al servidor:
+
+```bash
+scp -r \
+  -J ibugueno@172.16.105.104 \
+  /Users/ignacio/tmp/fic/reporteria/ClimateProcessing/assets/. \
+  uoh@172.16.0.76:/home/uoh/cerezas_web_server/config/climate-reporting/assets/
+```
+
+En el servidor, verificar:
+
+```bash
+find /home/uoh/cerezas_web_server/config/climate-reporting/assets -maxdepth 2 -type f | sort
+```
+
+Deben existir al menos `logo_fic.png`, `site_metadata.yaml` y el directorio `logos/`.
+
 En actualizaciones posteriores, comparar antes de reemplazar configuración local:
 
 ```bash
@@ -97,10 +115,12 @@ CEREZAS_CONFIG_HOST_PATH=/home/uoh/cerezas_web_server/config/climate-reporting
 
 MONGO_USER=uoh_cerezas
 MONGO_PASSWORD='REPLACE_WITH_ROTATED_PASSWORD'
+MAPBOX_ACCESS_TOKEN='REPLACE_WITH_ORIGINAL_MAPBOX_PUBLIC_TOKEN'
 ```
 
 Las comillas simples protegen caracteres como `$` y `#`. La credencial que estuvo versionada debe
-rotarse antes del despliegue.
+rotarse antes del despliegue. El token Mapbox debe corresponder al utilizado por el generador
+original; es necesario para reproducir el mapa satelital.
 
 Proteger archivos y directorios:
 
@@ -213,6 +233,15 @@ El resultado queda en:
 ```
 
 ## 13. Comparar con el flujo original
+
+Después de cambios exclusivamente visuales, regenerar los PDF sin repetir MongoDB, Meteostat o los
+cálculos climáticos:
+
+```bash
+docker compose run --rm climate-reporting pdf \
+  --kind daily \
+  --scheduled-date 2026-06-30
+```
 
 Comparar las ejecuciones históricas:
 

@@ -31,6 +31,7 @@ class MongoSettings:
 class Settings:
     config_dir: Path
     data_root: Path
+    assets_dir: Path
     mongo: MongoSettings
     sites: dict[str, Site]
     stations: dict[str, dict[str, Any]]
@@ -88,6 +89,7 @@ def load_settings(config_dir: Optional[Union[str, Path]] = None) -> Settings:
     return Settings(
         config_dir=directory,
         data_root=Path(os.getenv("CEREZAS_DATA_ROOT", pipeline["paths"]["data_root"])),
+        assets_dir=Path(os.getenv("CEREZAS_ASSETS_DIR", str(directory / "assets"))),
         mongo=MongoSettings(
             uri=uri,
             database=mongo_raw["database"],

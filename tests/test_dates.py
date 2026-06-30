@@ -47,7 +47,7 @@ class WindowTests(unittest.TestCase):
     def test_monthly_is_previous_calendar_month(self):
         window = window_for(RunKind.MONTHLY, date(2026, 7, 1))
         self.assertEqual(window.report_date, date(2026, 6, 30))
-        self.assertEqual(window.start_utc, datetime(2026, 6, 1, 4, tzinfo=timezone.utc))
+        self.assertEqual(window.start_utc, datetime(2026, 5, 1, 4, tzinfo=timezone.utc))
         self.assertEqual(window.end_utc, datetime(2026, 7, 1, 3, 59, 59, 999999, tzinfo=timezone.utc))
 
 

@@ -20,7 +20,8 @@ equivalente a `05:30 UTC`.
 
 - Fuera del 2 de mayo al 1 de noviembre no se generan ejecuciones automáticas.
 - Daily y weekly procesan desde el 1 de mayo hasta el día anterior.
-- Monthly procesa el mes calendario inmediatamente anterior.
+- Monthly presenta el mes calendario inmediatamente anterior y conserva el acumulado de temporada
+  desde el 1 de mayo para calcular las métricas y tablas del boletín original.
 - Si el contenedor no estaba disponible a la hora programada, recupera las ejecuciones
   pendientes dentro de la ventana configurada.
 
@@ -59,6 +60,7 @@ Los resultados persisten en:
 - `config/pipeline.yaml`: MongoDB, horario, modelos y filtros de sensores.
 - `config/sites.yaml`: beneficiarios, grupo FIC, ciudad y nombres de salida.
 - `config/stations.yaml`: coordenadas usadas para Meteostat.
+- `config/assets/`: logos y metadata originales requeridos para reproducir los PDF fielmente.
 
 Locations y filtros están desacoplados del procesamiento. Los filtros aceptan IDs exactos o
 expresiones regulares en `sensor_filters`, por lo que no se requiere cambiar código para excluir
@@ -86,6 +88,12 @@ Ejecutar manualmente:
 ```bash
 cerezas-pipeline run --kind daily --scheduled-date 2026-06-30
 cerezas-pipeline dispatch --scheduled-date 2026-07-01
+```
+
+Regenerar solamente los PDF de una ejecución ya procesada:
+
+```bash
+cerezas-pipeline pdf --kind daily --scheduled-date 2026-06-30
 ```
 
 `scheduled-date` es la fecha en que habría corrido el scheduler; el reporte corresponde al día
@@ -118,6 +126,10 @@ docker compose build
 docker compose up -d
 docker compose logs -f climate-reporting
 ```
+
+Antes del build, copiar los assets originales desde el computador local al servidor siguiendo
+[docs/server-deployment.md](docs/server-deployment.md). También se debe configurar
+`MAPBOX_ACCESS_TOKEN` en `.env`; el mapa satelital original depende de ese token.
 
 Las rutas del host se configuran en `.env`:
 

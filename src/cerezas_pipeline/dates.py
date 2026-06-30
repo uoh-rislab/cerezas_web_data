@@ -62,13 +62,10 @@ def window_for(
     season_start_day: int = 1,
 ) -> RunWindow:
     report_date = scheduled_date - timedelta(days=1)
-    if kind == RunKind.MONTHLY:
-        start_local_date = report_date.replace(day=1)
-    else:
-        start_local_date = date(report_date.year, season_start_month, season_start_day)
-        if report_date < start_local_date:
-            # Permite operar todo el año: antes de mayo usa la temporada previa.
-            start_local_date = date(report_date.year - 1, season_start_month, season_start_day)
+    start_local_date = date(report_date.year, season_start_month, season_start_day)
+    if report_date < start_local_date:
+        # Permite ejecuciones manuales anteriores a mayo usando la temporada previa.
+        start_local_date = date(report_date.year - 1, season_start_month, season_start_day)
 
     start_local = datetime.combine(start_local_date, time.min, FIXED_CHILE_TZ)
     end_local = datetime.combine(report_date, time.max, FIXED_CHILE_TZ)

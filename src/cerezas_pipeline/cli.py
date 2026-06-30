@@ -7,7 +7,9 @@ import sqlite3
 from datetime import date
 from pathlib import Path
 
+from .artifacts import RunPaths
 from .dates import RunKind, fixed_now, kinds_for_scheduled_date, window_for
+from .pdf_report import generate_all_pdfs
 from .pipeline import run_pipeline
 from .scheduler import run_scheduler
 from .settings import load_settings
@@ -28,6 +30,10 @@ def _parser() -> argparse.ArgumentParser:
 
     dispatch = subparsers.add_parser("dispatch", help="Ejecutar lo programado para una fecha")
     dispatch.add_argument("--scheduled-date", type=_date, default=None)
+
+    pdf = subparsers.add_parser("pdf", help="Regenerar solamente los PDF de una ejecución existente")
+    pdf.add_argument("--kind", choices=[kind.value for kind in RunKind], required=True)
+    pdf.add_argument("--scheduled-date", type=_date, required=True)
 
     plan = subparsers.add_parser("plan", help="Mostrar ejecuciones y ventanas sin conectarse")
     plan.add_argument("--scheduled-date", type=_date, default=None)
@@ -65,6 +71,17 @@ def main() -> None:
     elif arguments.command == "dispatch":
         for kind in kinds_for_scheduled_date(scheduled_date):
             run_pipeline(settings, kind, scheduled_date)
+    elif arguments.command == "pdf":
+        kind = RunKind(arguments.kind)
+        window = window_for(
+            kind,
+            scheduled_date,
+            season_start_month=settings.season_start_month,
+            season_start_day=settings.season_start_day,
+        )
+        paths = RunPaths.create(settings.data_root, window)
+        results = generate_all_pdfs(settings, window, paths)
+        print(json.dumps(results, ensure_ascii=False, indent=2))
     elif arguments.command == "schedule":
         run_scheduler(settings)
     elif arguments.command == "health":
@@ -78,4 +95,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

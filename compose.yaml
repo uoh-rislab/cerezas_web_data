@@ -9,6 +9,7 @@ services:
       - .env
     environment:
       CEREZAS_CONFIG_DIR: /app/config
+      CEREZAS_ASSETS_DIR: /app/config/assets
       CEREZAS_DATA_ROOT: /data
     volumes:
       - "${CEREZAS_DATA_HOST_PATH:-/home/uoh/cerezas_web_server/data/climate-reporting}:/data"
