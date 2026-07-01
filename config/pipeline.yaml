@@ -33,7 +33,3 @@ sensor_models:
 sensor_filters:
   excluded_device_ids: []
   excluded_device_patterns: []
-
-email:
-  enabled: false
-  recipients: []

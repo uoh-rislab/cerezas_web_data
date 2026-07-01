@@ -138,23 +138,8 @@ def _daily_or_weekly(site: Site, window: RunWindow, paths: RunPaths, root: Path)
     return _move_generated(generated_dir, paths.pdf / site.group, site)
 
 
-def _monthly_fic2(site: Site, window: RunWindow, paths: RunPaths, root: Path) -> Path:
-    from .faithful_pdf import monthly_fic2
-
-    report_date = window.report_date
-    start = report_date.replace(day=1)
-    end_date = f"{report_date.isoformat()} 23:59:59"
-    month_words = f"{SPANISH_MONTHS[report_date.month]} {report_date.year}"
-    with _working_directory(root / "generate_pdf"):
-        monthly_fic2.main(
-            f"{paths.reports}/", site.site_id, _dataset_key(site), report_date.strftime("%Y-%m"),
-            month_words, start.isoformat(), end_date, (report_date - timedelta(days=6)).isoformat(),
-        )
-    return _move_generated(root / "generate_pdf" / "pdf", paths.pdf / site.group, site)
-
-
-def _monthly_fic1(site: Site, window: RunWindow, paths: RunPaths, root: Path) -> Path:
-    from .faithful_pdf import monthly_fic1
+def _monthly_comparison(site: Site, window: RunWindow, paths: RunPaths, root: Path) -> Path:
+    from .faithful_pdf import monthly
 
     report_date = window.report_date
     previous_date = report_date.replace(year=report_date.year - 1)
@@ -165,19 +150,18 @@ def _monthly_fic1(site: Site, window: RunWindow, paths: RunPaths, root: Path) ->
     if not previous_report.exists():
         raise RuntimeError(
             f"Falta el reporte comparativo del año anterior: {previous_report}. "
-            f"Ejecute primero monthly con scheduled-date {(previous_date + timedelta(days=1)).isoformat()}."
+            "Prepare primero el histórico con: cerezas-pipeline run --kind monthly "
+            f"--scheduled-date {(previous_date + timedelta(days=1)).isoformat()} --skip-pdf."
         )
     start = report_date.replace(day=1)
     previous_start = previous_date.replace(day=1)
     with _working_directory(root / "generate_pdf"):
-        monthly_fic1.main(
+        monthly.main(
             f"{paths.reports}/", f"{previous_report.parent}/", site.site_id, site.site_id,
             _dataset_key(site), report_date.strftime("%Y-%m"),
             f"{SPANISH_MONTHS[report_date.month]} {report_date.year}", start.isoformat(),
             f"{report_date.isoformat()} 23:59:59", (report_date - timedelta(days=6)).isoformat(),
             previous_start.isoformat(), f"{previous_date.isoformat()} 23:59:59",
-            (previous_date - timedelta(days=6)).isoformat(), previous_date.strftime("%Y-%m"),
-            f"{SPANISH_MONTHS[previous_date.month]} {previous_date.year}",
         )
     return _move_generated(root / "generate_pdf" / "pdf", paths.pdf / site.group, site)
 
@@ -195,10 +179,8 @@ def generate_site_pdf(settings: Settings, site: Site, window: RunWindow, paths: 
     _write_locations(site, window, paths, root)
     if window.kind in (RunKind.DAILY, RunKind.WEEKLY):
         output = _daily_or_weekly(site, window, paths, root)
-    elif site.group == "fic1":
-        output = _monthly_fic1(site, window, paths, root)
     else:
-        output = _monthly_fic2(site, window, paths, root)
+        output = _monthly_comparison(site, window, paths, root)
     return {"site": site.site_id, "generated": True, "path": str(output)}
 
 

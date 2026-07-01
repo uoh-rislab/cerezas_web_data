@@ -1,0 +1,35 @@
+enabled: false
+timezone: America/Santiago
+send_hour: 4
+send_minute: 0
+retry_minutes: 30
+
+sender:
+  display_name: Universidad de O'Higgins - Proyecto FIC Cerezas
+  delegated_user: ""
+  service_account_file: /run/secrets/gmail-service-account.json
+
+global_cc:
+  - name: Daniel Casagrande
+    email: daniel.casagrande@uoh.cl
+  - name: Jaime Varas
+    email: jaime.varas@uoh.cl
+  - name: Luis Gustavo Cossio Montefinale
+    email: luis.cossio@uoh.cl
+
+# Each generated PDF is sent separately using its site ID.
+# Add primary recipients under `to`; site-specific `cc` entries are appended to global_cc.
+sites:
+  fic1-rengo-agritorre: {to: [], cc: []}
+  fic1-rengo-ceaf: {to: [], cc: []}
+  fic1-requinoa-requiagro: {to: [], cc: []}
+  fic1-graneros-agrofurore: {to: [], cc: []}
+  fic2-graneros-agrofurore: {to: [], cc: []}
+  fic2-peumo-greenex: {to: [], cc: []}
+  fic2-rengo-agricura: {to: [], cc: []}
+  fic2-rengo-agritorre: {to: [], cc: []}
+  fic2-rengo-donajaviera: {to: [], cc: []}
+  fic2-rengo-elperal: {to: [], cc: []}
+  fic2-rengo-eltotoral: {to: [], cc: []}
+  fic2-sanfernando-liceoagricola: {to: [], cc: []}
+

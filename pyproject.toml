@@ -8,6 +8,8 @@ version = "0.1.0"
 description = "Pipeline automatizado de reportería climática UOH Cerezas"
 requires-python = ">=3.9"
 dependencies = [
+  "google-api-python-client>=2,<3",
+  "google-auth>=2,<3",
   "kaleido==0.2.1",
   "meteostat>=1.6,<2",
   "numpy>=1.26,<3",
@@ -16,6 +18,7 @@ dependencies = [
   "pymongo>=4.6,<5",
   "PyYAML>=6,<7",
   "reportlab>=4,<5",
+  "tzdata>=2024.1",
 ]
 
 [project.optional-dependencies]

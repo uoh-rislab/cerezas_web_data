@@ -9,6 +9,8 @@ from pathlib import Path
 
 from .artifacts import RunPaths
 from .dates import RunKind, fixed_now, kinds_for_scheduled_date, window_for
+from .email_delivery.config import load_email_settings
+from .email_delivery.service import deliver_kind
 from .pdf_report import generate_all_pdfs
 from .pipeline import run_pipeline
 from .scheduler import run_scheduler
@@ -27,6 +29,11 @@ def _parser() -> argparse.ArgumentParser:
     run = subparsers.add_parser("run", help="Ejecutar un pipeline manualmente")
     run.add_argument("--kind", choices=[kind.value for kind in RunKind], required=True)
     run.add_argument("--scheduled-date", type=_date, default=None)
+    run.add_argument(
+        "--skip-pdf",
+        action="store_true",
+        help="Procesar hasta CSV/reportes sin generar boletines PDF",
+    )
 
     dispatch = subparsers.add_parser("dispatch", help="Ejecutar lo programado para una fecha")
     dispatch.add_argument("--scheduled-date", type=_date, default=None)
@@ -34,6 +41,12 @@ def _parser() -> argparse.ArgumentParser:
     pdf = subparsers.add_parser("pdf", help="Regenerar solamente los PDF de una ejecución existente")
     pdf.add_argument("--kind", choices=[kind.value for kind in RunKind], required=True)
     pdf.add_argument("--scheduled-date", type=_date, required=True)
+
+    email = subparsers.add_parser("email", help="Previsualizar o enviar correos de una ejecución existente")
+    email.add_argument("--kind", choices=[kind.value for kind in RunKind], required=True)
+    email.add_argument("--scheduled-date", type=_date, required=True)
+    email.add_argument("--site", help="Limitar a un site ID")
+    email.add_argument("--send", action="store_true", help="Enviar realmente mediante Gmail API")
 
     plan = subparsers.add_parser("plan", help="Mostrar ejecuciones y ventanas sin conectarse")
     plan.add_argument("--scheduled-date", type=_date, default=None)
@@ -66,7 +79,12 @@ def main() -> None:
 
     settings = load_settings(arguments.config_dir)
     if arguments.command == "run":
-        result = run_pipeline(settings, RunKind(arguments.kind), scheduled_date)
+        result = run_pipeline(
+            settings,
+            RunKind(arguments.kind),
+            scheduled_date,
+            generate_pdf=not arguments.skip_pdf,
+        )
         print(json.dumps(result, ensure_ascii=False, indent=2))
     elif arguments.command == "dispatch":
         for kind in kinds_for_scheduled_date(scheduled_date):
@@ -81,6 +99,15 @@ def main() -> None:
         )
         paths = RunPaths.create(settings.data_root, window)
         results = generate_all_pdfs(settings, window, paths)
+        print(json.dumps(results, ensure_ascii=False, indent=2))
+    elif arguments.command == "email":
+        email_settings = load_email_settings(settings.config_dir)
+        if arguments.send and not email_settings.enabled:
+            raise SystemExit("El envío está deshabilitado en config/email.yaml")
+        results = deliver_kind(
+            settings, email_settings, scheduled_date, RunKind(arguments.kind),
+            send=arguments.send, site_filter=arguments.site,
+        )
         print(json.dumps(results, ensure_ascii=False, indent=2))
     elif arguments.command == "schedule":
         run_scheduler(settings)

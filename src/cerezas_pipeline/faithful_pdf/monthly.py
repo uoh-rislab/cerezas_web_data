@@ -23,6 +23,7 @@ import plotly
 
 from reportlab.platypus import Table, TableStyle
 from reportlab.lib import colors
+from reportlab.platypus import KeepTogether
 
 
 # === Coloca tu token aquí ===
@@ -103,7 +104,8 @@ def create_figure(df, columns, title, color_map, image_path):
 
 
 
-def create_weekly_table(df, start_date, end_date, style_centered):
+def create_weekly_table(df, start_date, end_date, style_centered, year_label):
+
     start_dt = pd.to_datetime(start_date)
     end_dt = pd.to_datetime(end_date)
 
@@ -123,11 +125,8 @@ def create_weekly_table(df, start_date, end_date, style_centered):
         weeks.append( (week_start, min(week_end, end_dt)) )
         current = current + pd.Timedelta(days=7)
 
-    data = [[
-        'Semana',
-        Paragraph('HF', style_centered),
-        Paragraph('PF', style_centered)
-    ]]
+    data = [['Semana', 'Año', Paragraph('HF', style_centered), Paragraph('PF', style_centered)]]
+
 
     for i, (week_start, week_end) in enumerate(weeks):
         # Generar rango de la semana
@@ -153,9 +152,8 @@ def create_weekly_table(df, start_date, end_date, style_centered):
         semana_texto = f"Semana {week_number} ({week_start.strftime('%A %d de %B')} - {week_end.strftime('%A %d de %B')})"
         semana_texto = semana_texto.capitalize()
 
-        data.append([semana_texto,
-                     round(hf_last_day_avg,1),
-                     round(pf_last_day_avg,1)])
+        data.append([semana_texto, year_label, round(hf_last_day_avg,1), round(pf_last_day_avg,1)])
+
 
     return Table(data, hAlign='CENTER')
 
@@ -165,7 +163,8 @@ def create_weekly_table(df, start_date, end_date, style_centered):
 
 
 
-def create_daily_pf_table(df, start_month):
+def create_daily_pf_table(df, start_month, year_label):
+
     if not pd.api.types.is_datetime64_any_dtype(df['timestamp']):
         df['timestamp'] = pd.to_datetime(df['timestamp'])
 
@@ -175,13 +174,16 @@ def create_daily_pf_table(df, start_month):
     df_filtered = df[df['timestamp'].dt.month >= start_month]
 
     months = sorted(df_filtered['timestamp'].dt.month.unique())
-    month_names = [pd.Timestamp(month=month, day=1, year=2025).strftime('%B').capitalize() for month in months]
+    month_names = [
+        pd.Timestamp(month=month, day=1, year=int(year_label)).strftime('%B').capitalize()
+        for month in months
+    ]
     print("Meses incluidos en tabla:", month_names)
 
-    data = [['Día'] + month_names]
+    data = [['Día', 'Año'] + month_names]
 
     for day in range(1,32):
-        row = [str(day)]
+        row = [str(day), year_label]
         for month in months:
             df_day = df_filtered[(df_filtered['timestamp'].dt.month == month) & (df_filtered['timestamp'].dt.day == day)]
             if not df_day.empty:
@@ -206,10 +208,14 @@ def style_table(table):
     ]))
 
 
-def main(base_path_reports, fic_name, dataset_key, month_root, month_words_root, start_date_root, end_date_root, last_7_days_root):
+def main(current_base_path_reports, previous_base_path_reports, current_site_id, previous_site_id, dataset_key,
+    current_month_root, current_month_words_root, current_start_date_root, current_end_date_root, current_last_7_days_root,
+    previous_start_date_root, previous_end_date_root):
+
     
     styles = getSampleStyleSheet()
-    current_year_label = str(pd.Timestamp(end_date_root).year)
+    current_year_label = str(pd.Timestamp(current_end_date_root).year)
+    previous_year_label = str(pd.Timestamp(previous_end_date_root).year)
     
     style_centered = ParagraphStyle(
         'centered',
@@ -224,10 +230,27 @@ def main(base_path_reports, fic_name, dataset_key, month_root, month_words_root,
     site_name = site_info[dataset_key]["nombre"]
     site_location = site_info[dataset_key]["ubicacion"] + ", Región del Libertador Bernardo O’Higgins"
 
-    df_raw = pd.read_csv(f"{base_path_reports}{fic_name}.csv")
-    df_raw["timestamp"] = pd.to_datetime(dict(year=df_raw["Año"], month=df_raw["Mes"], day=df_raw["Dia"], hour=df_raw["Hora"]))
+    df_current = pd.read_csv(f"{current_base_path_reports}{current_site_id}.csv")
 
-    with open(f"../locations/sensor_locations_{fic_name}.txt", "r", encoding="utf-8") as f:
+    df_current["timestamp"] = pd.to_datetime(dict(year=df_current["Año"], month=df_current["Mes"], day=df_current["Dia"], hour=df_current["Hora"]))
+
+    df_previous = pd.read_csv(f"{previous_base_path_reports}{previous_site_id}.csv")
+    df_previous["timestamp"] = pd.to_datetime(dict(year=df_previous["Año"], month=df_previous["Mes"], day=df_previous["Dia"], hour=df_previous["Hora"]))
+
+
+    # Filtrar hasta la misma fecha de corte del año anterior. El CSV ya comienza
+    # en el inicio de temporada configurado por el pipeline.
+    previous_data_start = df_previous["timestamp"].min()
+    previous_data_end = pd.Timestamp(previous_end_date_root)
+
+    df_previous = df_previous[
+        (df_previous["timestamp"] >= previous_data_start)
+        & (df_previous["timestamp"] <= previous_data_end)
+    ]
+
+
+    with open(f"../locations/sensor_locations_{current_site_id}.txt", "r", encoding="utf-8") as f:
+
         local_vars = {}
         exec(f.read(), {}, local_vars)
         sensor_locations = local_vars.get("sensor_locations")
@@ -243,21 +266,22 @@ def main(base_path_reports, fic_name, dataset_key, month_root, month_words_root,
     num_sensores = len(sensor_locations_df)
 
 
-    sensor_cols = [col for col in df_raw.columns if col.startswith("A8") and " " not in col and not any(col.startswith(s) for s in excluded_sensors)]
-    hf_cols = [col for col in df_raw.columns if col.endswith("HF") and not any(col.startswith(s) for s in excluded_sensors)]
-    pf_cols = [col for col in df_raw.columns if col.endswith("PF") and not any(col.startswith(s) for s in excluded_sensors)]
+    sensor_cols = [col for col in df_current.columns if col.startswith("A8") and " " not in col and not any(col.startswith(s) for s in excluded_sensors)]
+    hf_cols = [col for col in df_current.columns if col.endswith("HF") and not any(col.startswith(s) for s in excluded_sensors)]
+    pf_cols = [col for col in df_current.columns if col.endswith("PF") and not any(col.startswith(s) for s in excluded_sensors)]
 
     colors = pc.qualitative.Plotly
     sensor_ids = sensor_cols
     color_map = {sensor: colors[i % len(colors)] for i, sensor in enumerate(sensor_ids)}
 
-    start_date = pd.Timestamp(start_date_root)
-    end_date = pd.Timestamp(end_date_root)
-    df_may = df_raw[(df_raw["timestamp"] >= start_date) & (df_raw["timestamp"] <= end_date)]
+    start_date = pd.Timestamp(current_start_date_root)
+    end_date = pd.Timestamp(current_end_date_root)
+    df_may = df_current[(df_current["timestamp"] >= start_date) & (df_current["timestamp"] <= end_date)]
+
 
     output_dir = Path("pdf")
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_file = output_dir / f"{month_root} UOH Cerezas Boletin Mensual - {site_name}.pdf"
+    output_file = output_dir / f"{current_month_root} UOH Cerezas Boletin Mensual - {site_name}.pdf"
 
     img_temp = output_dir / "fig_temp.jpg"
     img_hf = output_dir / "fig_hf.jpg"
@@ -265,8 +289,8 @@ def main(base_path_reports, fic_name, dataset_key, month_root, month_words_root,
     img_map = output_dir / "map_sensores.jpg"
 
     img_temp7 = output_dir / "fig_temp_ultimos7.jpg"
-    df_last7 = df_may[(df_may["timestamp"] >= last_7_days_root) & (df_may["timestamp"] <= end_date_root)]
-    create_figure(df_last7, sensor_cols, f"Temperatura - Últimos 7 días ({last_7_days_root} al {end_date_root})", color_map, img_temp7)
+    df_last7 = df_may[(df_may["timestamp"] >= current_last_7_days_root) & (df_may["timestamp"] <= current_end_date_root)]
+    create_figure(df_last7, sensor_cols, f"Temperatura - Últimos 7 días ({current_last_7_days_root} al {current_end_date_root})", color_map, img_temp7)
 
     create_figure(df_may, sensor_cols, "Temperatura (°C)", color_map, img_temp)
     create_figure(df_may, hf_cols, "Horas Frío", color_map, img_hf)
@@ -332,7 +356,7 @@ def main(base_path_reports, fic_name, dataset_key, month_root, month_words_root,
     doc = SimpleDocTemplate(
         str(output_file),
         pagesize=A4,
-        title=f"{month_root} UOH Cerezas Boletin Mensual - {site_name}",
+        title=f"{current_month_root} UOH Cerezas Boletin Mensual - {site_name}",
         topMargin=100  # Ajusta según la altura de tus logos + espacio deseado
     )
 
@@ -353,7 +377,7 @@ def main(base_path_reports, fic_name, dataset_key, month_root, month_words_root,
     ))
 
     story.append(Paragraph(f"<b>UOH Cerezas - Boletín Mensual Agroclimático</b>", styles['Heading1Center']))
-    story.append(Paragraph(f"<b>{site_name} - {month_words_root}</b>", styles['Heading2Center']))
+    story.append(Paragraph(f"<b>{site_name} - {current_month_words_root}</b>", styles['Heading2Center']))
     story.append(Paragraph(f"{site_location}", styles['Center']))
     story.append(Paragraph(datetime.now().strftime("Fecha del reporte: %d de %B del %Y").replace(datetime.now().strftime("%B"), datetime.now().strftime("%B").title()), styles['Center']))
     story.append(Spacer(1, 20))
@@ -381,7 +405,7 @@ def main(base_path_reports, fic_name, dataset_key, month_root, month_words_root,
 
     #story.append(PageBreak())
 
-    story.append(Paragraph(f"<b>Temperatura (°C) promedio en {month_words_root}</b>", styles['Heading2']))
+    story.append(Paragraph(f"<b>Temperatura (°C) promedio en {current_month_words_root}</b>", styles['Heading2']))
     #story.append(Image(str(img_temp), width=480, height=288))
     story.append(Image(str(img_temp), width=480, height=270))
     story.append(Spacer(1, 10))
@@ -392,24 +416,51 @@ def main(base_path_reports, fic_name, dataset_key, month_root, month_words_root,
 
     story.append(PageBreak())
 
-    story.append(Paragraph(f"<b>Horas Frío promedio en {month_words_root}</b>", styles['Heading2']))
+    story.append(Paragraph(f"<b>Horas Frío promedio en {current_month_words_root}</b>", styles['Heading2']))
     story.append(Image(str(img_hf), width=480, height=288))
     story.append(Spacer(1, 10))
 
-    story.append(Paragraph(f"<b>Porciones de Frío promedio en {month_words_root}</b>", styles['Heading2']))
+    story.append(Paragraph(f"<b>Porciones de Frío promedio en {current_month_words_root}</b>", styles['Heading2']))
     story.append(Image(str(img_pf), width=480, height=288))
 
-    daily_pf_table = create_daily_pf_table(df_raw, 5)  # 5 = Mayo
-    style_table(daily_pf_table)
-    story.append(Paragraph("<b>Acumulación diaria de Porciones de Frío - Mayo</b>", styles['Heading2']))
-    story.append(daily_pf_table)
+    # Crear tablas diarias para ambos años
+    daily_pf_table_previous = create_daily_pf_table(df_previous, 5, previous_year_label)
+    daily_pf_table_current = create_daily_pf_table(df_current, 5, current_year_label)
+
+    style_table(daily_pf_table_previous)
+    style_table(daily_pf_table_current)
+
+    story.append(Paragraph(f"<b>Acumulación diaria de Porciones de Frío - Comparativa {previous_year_label} vs {current_year_label}</b>", styles['Heading2']))
+
+    combined_table = Table(
+        [[daily_pf_table_previous, '', daily_pf_table_current]],
+        colWidths=[None, 5, None],
+        hAlign='CENTER'
+    )
+
+    combined_table.setStyle(TableStyle([
+        ('VALIGN', (0,0), (-1,-1), 'TOP')
+    ]))
+
+    # Usar KeepTogether para evitar quiebres de página y centrar el bloque completo
+    story.append(KeepTogether([combined_table]))
+
 
     story.append(PageBreak())
 
-    weekly_table = create_weekly_table(df_raw, f"{current_year_label}-05-01", end_date_root, style_centered)
-    style_table(weekly_table)
-    story.append(Paragraph("<b>Acumulación semanal de Horas Frío y Porciones de Frío</b>", styles['Heading2']))
-    story.append(weekly_table)
+    # Crear tablas semanales para ambos años
+    weekly_table_previous = create_weekly_table(df_previous, previous_start_date_root, previous_end_date_root, style_centered, previous_year_label)
+    weekly_table_current = create_weekly_table(df_current, current_start_date_root, current_end_date_root, style_centered, current_year_label)
+
+    style_table(weekly_table_previous)
+    style_table(weekly_table_current)
+
+    story.append(Paragraph(f"<b>Acumulación semanal de Horas Frío y Porciones de Frío - {previous_year_label}</b>", styles['Heading2']))
+    story.append(weekly_table_previous)
+
+    story.append(Paragraph(f"<b>Acumulación semanal de Horas Frío y Porciones de Frío - {current_year_label}</b>", styles['Heading2']))
+    story.append(weekly_table_current)
+
 
 
     doc.build(story, onFirstPage=add_page_decorations, onLaterPages=add_page_decorations)
@@ -422,31 +473,5 @@ def main(base_path_reports, fic_name, dataset_key, month_root, month_words_root,
 
     print(f"PDF generado exitosamente: {output_file}")
 
-if __name__ == "__main__":
-    # Ruta a la carpeta
-    folder = "../reports/2025/"
-    current_base_path_reports = "../reports/2025/temp_process_2025_may-jun_output_"
-    current_start_date_root  = "2025-06-01"
-    current_end_date_root    = "2025-06-30 23:59:59"
-    current_last_7_days_root = "2025-06-23"
-    current_month_root       = "2025-07"
-    current_month_words_root = "Junio 2025"
 
-    # Listar archivos
-    files = os.listdir(folder)
-
-    # Filtrar y extraer desde 'fic' hasta antes de '.csv'
-    names = []
-    for f in files:
-        if f.endswith(".csv") and "fic2" in f:
-            start = f.find("fic")
-            end = f.rfind(".csv")
-            names.append([f[start:end], f[start+5:end]])
-
-    # Mostrar resultado
-    for fic_name, dataset_key in names:
-        print(fic_name, dataset_key)
-
-        main(current_base_path_reports, fic_name, dataset_key, 
-            current_month_root, current_month_words_root, current_start_date_root, current_end_date_root, current_last_7_days_root)
         #break

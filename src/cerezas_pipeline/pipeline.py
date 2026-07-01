@@ -18,7 +18,12 @@ from .weather import fetch_weather
 Stage = tuple[str, Callable[..., list[dict[str, Any]]]]
 
 
-def run_pipeline(settings: Settings, kind: RunKind, scheduled_date: date) -> dict[str, Any]:
+def run_pipeline(
+    settings: Settings,
+    kind: RunKind,
+    scheduled_date: date,
+    generate_pdf: bool = True,
+) -> dict[str, Any]:
     window = window_for(
         kind,
         scheduled_date,
@@ -33,6 +38,7 @@ def run_pipeline(settings: Settings, kind: RunKind, scheduled_date: date) -> dic
         "report_date": window.report_date.isoformat(),
         "window": {"start_utc": window.start_utc.isoformat(), "end_utc": window.end_utc.isoformat()},
         "status": "running",
+        "generate_pdf": generate_pdf,
         "stages": {},
     }
     paths.write_manifest(manifest)
@@ -42,8 +48,9 @@ def run_pipeline(settings: Settings, kind: RunKind, scheduled_date: date) -> dic
         ("repair", lambda: repair_all(settings, window, paths)),
         ("csv", lambda: convert_all(settings, paths)),
         ("climate", lambda: process_all(settings, window, paths)),
-        ("pdf", lambda: generate_all_pdfs(settings, window, paths)),
     ]
+    if generate_pdf:
+        stages.append(("pdf", lambda: generate_all_pdfs(settings, window, paths)))
     try:
         for name, execute in stages:
             manifest["stages"][name] = {"status": "running"}

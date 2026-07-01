@@ -6,6 +6,7 @@ import time
 from datetime import date, datetime, time as datetime_time, timedelta
 from pathlib import Path
 from typing import Optional
+from zoneinfo import ZoneInfo
 
 from .dates import (
     FIXED_CHILE_TZ,
@@ -14,6 +15,8 @@ from .dates import (
     is_in_schedule_window,
     kinds_for_scheduled_date,
 )
+from .email_delivery.config import load_email_settings
+from .email_delivery.service import deliver_kind, is_email_time
 from .pipeline import run_pipeline
 from .settings import Settings
 
@@ -109,7 +112,15 @@ def due_dates(settings: Settings, state: SchedulerState, now: datetime) -> list[
 
 def run_scheduler(settings: Settings, poll_seconds: int = 30) -> None:
     state = SchedulerState(settings.data_root / "state" / "scheduler.db")
+    email_settings = load_email_settings(settings.config_dir)
     LOGGER.info("Scheduler activo: %02d:%02d UTC-4 fijo", settings.schedule_hour, settings.schedule_minute)
+    if email_settings.enabled:
+        LOGGER.info(
+            "Envío Gmail activo: %02d:%02d %s",
+            email_settings.send_hour, email_settings.send_minute, email_settings.timezone,
+        )
+    else:
+        LOGGER.info("Envío Gmail deshabilitado")
     while True:
         now = fixed_now()
         for scheduled_date in due_dates(settings, state, now):
@@ -131,6 +142,21 @@ def run_scheduler(settings: Settings, poll_seconds: int = 30) -> None:
                 except Exception as error:
                     state.mark(scheduled_date, kind, "failed", fixed_now(), str(error))
                     LOGGER.exception("Falló %s para %s", kind.value, scheduled_date)
+        if email_settings.enabled:
+            chile_now = datetime.now(ZoneInfo(email_settings.timezone))
+            email_day = chile_now.date()
+            if is_email_time(email_settings, chile_now):
+                for kind in kinds_for_scheduled_date(
+                    email_day,
+                    settings.schedule_start_month,
+                    settings.schedule_start_day,
+                    settings.schedule_end_month,
+                    settings.schedule_end_day,
+                ):
+                    results = deliver_kind(settings, email_settings, email_day, kind, send=True)
+                    for result in results:
+                        if result.get("status") in {"sent", "failed"}:
+                            LOGGER.info("Email %s %s: %s", kind.value, result.get("site"), result.get("status"))
         state.set("last_seen", now.date().isoformat())
         state.set("heartbeat", now.isoformat())
         time.sleep(poll_seconds)

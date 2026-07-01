@@ -80,6 +80,7 @@ Los archivos activos son:
 
 ```text
 /home/uoh/cerezas_web_server/config/climate-reporting/
+├── email.yaml
 ├── pipeline.yaml
 ├── sites.yaml
 └── stations.yaml
@@ -206,6 +207,22 @@ El resultado queda en:
 
 ## 12. Probar monthly
 
+Los boletines monthly de FIC1 y FIC2 comparan con el mismo período del año anterior. Deben existir
+previamente los CSV procesados del año anterior bajo
+`runs/monthly/<previous-report-date>/06_reports/` para cada site.
+
+Para preparar Junio 2025 como base comparativa sin exigir a su vez los PDF de 2024:
+
+```bash
+docker compose run --rm climate-reporting run \
+  --kind monthly \
+  --scheduled-date 2025-07-01 \
+  --skip-pdf
+```
+
+Este comando ejecuta extracción, Meteostat, reparación, CSV y procesamiento climático, pero omite
+solamente los PDF. Debe ejecutarse una vez por cada mes histórico que se utilizará como comparación.
+
 ```bash
 docker compose run --rm climate-reporting run \
   --kind monthly \
@@ -256,9 +273,61 @@ docker compose logs --tail=100 -f climate-reporting
 Si la fecha actual está dentro de temporada y ya pasó la hora programada, la primera activación
 puede ejecutar inmediatamente el trabajo pendiente del día.
 
+### Primera ejecución y recuperación
+
+Al iniciar por primera vez, es normal observar temporalmente:
+
+```text
+running starting
+```
+
+El healthcheck tiene un período inicial y debería cambiar a `running healthy` después de
+aproximadamente un minuto. Si el scheduler detecta que la fecha está dentro de temporada, que ya
+pasaron las 01:30 UTC-4 y que no existe una ejecución registrada para el día, comienza una
+recuperación inmediatamente:
+
+```text
+Scheduler activo: 01:30 UTC-4 fijo
+Iniciando daily para fecha programada YYYY-MM-DD
+```
+
+Una ejecución manual realizada previamente con `docker compose run` no registra el trabajo en la
+base del scheduler. Por eso la primera activación puede repetir esa fecha una vez. La ejecución es
+idempotente y reemplaza los artefactos de la misma fecha.
+
+Seguir el progreso sin detener el servicio:
+
+```bash
+docker compose logs -f climate-reporting
+```
+
+Salir de la vista de logs con `Ctrl+C` no detiene el contenedor. Al finalizar debe aparecer:
+
+```text
+Completado daily para YYYY-MM-DD
+```
+
+Para una ejecución concreta, revisar también su manifiesto persistente. Por ejemplo:
+
+```bash
+python3 -m json.tool \
+  /home/uoh/cerezas_web_server/data/climate-reporting/runs/daily/2026-06-29/manifest.json
+```
+
+Durante el procesamiento puede mostrar `"status": "running"`; al terminar debe mostrar
+`"status": "complete"`.
+
+La agenda normal es:
+
+- Lunes: weekly.
+- Martes a domingo: daily.
+- Día 1: monthly adicional a daily o weekly.
+- Ventana anual: 2 de mayo al 1 de noviembre, ambas fechas inclusive.
+
 ## 15. Verificar salud y acceder al contenedor
 
 ```bash
+docker compose ps
 docker inspect --format '{{.State.Status}} {{.State.Health.Status}}' climate-reporting
 docker compose exec climate-reporting sh
 ```
@@ -297,6 +366,13 @@ Los datos permanecen fuera del repositorio en:
 ```text
 /home/uoh/cerezas_web_server/data/climate-reporting
 ```
+
+## 18. Preparar envíos Gmail
+
+La integración está incluida pero deshabilitada por defecto, por lo que no modifica el servicio
+actual. La configuración de destinatarios, la cuenta de servicio, la prueba controlada y la
+activación de los envíos a las 04:00 hora de Chile se detallan en
+[email-delivery.md](email-delivery.md).
 
 ## Troubleshooting
 

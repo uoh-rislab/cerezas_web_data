@@ -21,7 +21,8 @@ equivalente a `05:30 UTC`.
 - Fuera del 2 de mayo al 1 de noviembre no se generan ejecuciones automáticas.
 - Daily y weekly procesan desde el 1 de mayo hasta el día anterior.
 - Monthly presenta el mes calendario inmediatamente anterior y conserva el acumulado de temporada
-  desde el 1 de mayo para calcular las métricas y tablas del boletín original.
+  desde el 1 de mayo para calcular las métricas y tablas del boletín original. Tanto FIC1 como FIC2
+  comparan sus acumulaciones diarias y semanales con el mismo período del año anterior.
 - Si el contenedor no estaba disponible a la hora programada, recupera las ejecuciones
   pendientes dentro de la ventana configurada.
 
@@ -60,6 +61,7 @@ Los resultados persisten en:
 - `config/pipeline.yaml`: MongoDB, horario, modelos y filtros de sensores.
 - `config/sites.yaml`: beneficiarios, grupo FIC, ciudad y nombres de salida.
 - `config/stations.yaml`: coordenadas usadas para Meteostat.
+- `config/email.yaml`: horario, remitente, destinatarios y copias de los boletines.
 - Los logos originales se versionan en `assets/` y se incorporan automáticamente a la imagen.
 
 Locations y filtros están desacoplados del procesamiento. Los filtros aceptan IDs exactos o
@@ -164,6 +166,10 @@ La imagen incluye `sh`; Bash no es necesario para operar o diagnosticar el servi
 
 El procedimiento completo de instalación, pruebas, activación y troubleshooting está disponible
 en [docs/server-deployment.md](docs/server-deployment.md).
+
+La integración opcional con Gmail, deshabilitada por defecto, se documenta en
+[docs/email-delivery.md](docs/email-delivery.md). Está preparada para enviar cada PDF a sus
+destinatarios a las 04:00 hora de Chile, respetando automáticamente horario de verano e invierno.
 
 Antes de activar el scheduler en producción:
 
