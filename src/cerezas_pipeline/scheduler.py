@@ -3,18 +3,12 @@ from __future__ import annotations
 import logging
 import sqlite3
 import time
-from datetime import date, datetime, time as datetime_time, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 from zoneinfo import ZoneInfo
 
-from .dates import (
-    FIXED_CHILE_TZ,
-    RunKind,
-    fixed_now,
-    is_in_schedule_window,
-    kinds_for_scheduled_date,
-)
+from .dates import RunKind, is_in_schedule_window, kinds_for_scheduled_date, scheduled_datetime
 from .email_delivery.config import load_email_settings
 from .email_delivery.service import deliver_kind, is_email_time
 from .pipeline import run_pipeline
@@ -83,8 +77,9 @@ class SchedulerState:
 
 
 def due_dates(settings: Settings, state: SchedulerState, now: datetime) -> list[date]:
+    local_now = now.astimezone(ZoneInfo(settings.schedule_timezone))
     if not is_in_schedule_window(
-        now.date(),
+        local_now.date(),
         settings.schedule_start_month,
         settings.schedule_start_day,
         settings.schedule_end_month,
@@ -93,18 +88,22 @@ def due_dates(settings: Settings, state: SchedulerState, now: datetime) -> list[
         return []
     last_seen = state.get("last_seen")
     if last_seen:
-        first = max(date.fromisoformat(last_seen), now.date() - timedelta(days=settings.catchup_days))
+        first = max(
+            date.fromisoformat(last_seen),
+            local_now.date() - timedelta(days=settings.catchup_days),
+        )
     else:
-        first = now.date()
+        first = local_now.date()
     days = []
     current = first
-    while current <= now.date():
-        scheduled_at = datetime.combine(
+    while current <= local_now.date():
+        scheduled_at = scheduled_datetime(
             current,
-            datetime_time(settings.schedule_hour, settings.schedule_minute),
-            FIXED_CHILE_TZ,
+            settings.schedule_hour,
+            settings.schedule_minute,
+            settings.schedule_timezone,
         )
-        if scheduled_at <= now:
+        if scheduled_at <= local_now:
             days.append(current)
         current += timedelta(days=1)
     return days
@@ -113,7 +112,13 @@ def due_dates(settings: Settings, state: SchedulerState, now: datetime) -> list[
 def run_scheduler(settings: Settings, poll_seconds: int = 30) -> None:
     state = SchedulerState(settings.data_root / "state" / "scheduler.db")
     email_settings = load_email_settings(settings.config_dir)
-    LOGGER.info("Scheduler activo: %02d:%02d UTC-4 fijo", settings.schedule_hour, settings.schedule_minute)
+    schedule_timezone = ZoneInfo(settings.schedule_timezone)
+    LOGGER.info(
+        "Scheduler activo: %02d:%02d %s",
+        settings.schedule_hour,
+        settings.schedule_minute,
+        settings.schedule_timezone,
+    )
     if email_settings.enabled:
         LOGGER.info(
             "Envío Gmail activo: %02d:%02d %s",
@@ -122,7 +127,7 @@ def run_scheduler(settings: Settings, poll_seconds: int = 30) -> None:
     else:
         LOGGER.info("Envío Gmail deshabilitado")
     while True:
-        now = fixed_now()
+        now = datetime.now(schedule_timezone)
         for scheduled_date in due_dates(settings, state, now):
             for kind in kinds_for_scheduled_date(
                 scheduled_date,
@@ -137,10 +142,16 @@ def run_scheduler(settings: Settings, poll_seconds: int = 30) -> None:
                 state.mark(scheduled_date, kind, "running", now)
                 try:
                     run_pipeline(settings, kind, scheduled_date)
-                    state.mark(scheduled_date, kind, "complete", fixed_now())
+                    state.mark(scheduled_date, kind, "complete", datetime.now(schedule_timezone))
                     LOGGER.info("Completado %s para %s", kind.value, scheduled_date)
                 except Exception as error:
-                    state.mark(scheduled_date, kind, "failed", fixed_now(), str(error))
+                    state.mark(
+                        scheduled_date,
+                        kind,
+                        "failed",
+                        datetime.now(schedule_timezone),
+                        str(error),
+                    )
                     LOGGER.exception("Falló %s para %s", kind.value, scheduled_date)
         if email_settings.enabled:
             chile_now = datetime.now(ZoneInfo(email_settings.timezone))

@@ -283,11 +283,11 @@ running starting
 
 El healthcheck tiene un período inicial y debería cambiar a `running healthy` después de
 aproximadamente un minuto. Si el scheduler detecta que la fecha está dentro de temporada, que ya
-pasaron las 01:30 UTC-4 y que no existe una ejecución registrada para el día, comienza una
+pasaron las 00:30 en `America/Santiago` y que no existe una ejecución registrada para el día, comienza una
 recuperación inmediatamente:
 
 ```text
-Scheduler activo: 01:30 UTC-4 fijo
+Scheduler activo: 00:30 America/Santiago
 Iniciando daily para fecha programada YYYY-MM-DD
 ```
 
@@ -373,6 +373,45 @@ La integración está incluida pero deshabilitada por defecto, por lo que no mod
 actual. La configuración de destinatarios, la cuenta de servicio, la prueba controlada y la
 activación de los envíos a las 04:00 hora de Chile se detallan en
 [email-delivery.md](email-delivery.md).
+
+## 19. Horario del scheduler
+
+El scheduler se ejecuta a las `00:30` usando la zona IANA `America/Santiago`. Esto mantiene las
+00:30 como hora civil de Chile y aplica automáticamente UTC-3 o UTC-4 según corresponda. Si el
+cambio al horario de verano elimina las 00:30 de un día, la ejecución ocurre en el primer minuto
+local válido posterior al salto, sin omitir el procesamiento de esa fecha.
+
+La configuración activa vive fuera del repositorio. Después de actualizar el código, editar:
+
+```bash
+nano /home/uoh/cerezas_web_server/config/climate-reporting/pipeline.yaml
+```
+
+Las primeras líneas deben ser:
+
+```yaml
+schedule_timezone: America/Santiago
+schedule_hour: 0
+schedule_minute: 30
+```
+
+Luego reconstruir y recrear el servicio:
+
+```bash
+cd /home/uoh/cerezas_web_server/services/climate-reporting
+docker compose build
+docker compose up -d
+docker compose logs --tail=100 climate-reporting
+```
+
+El log esperado es:
+
+```text
+Scheduler activo: 00:30 America/Santiago
+```
+
+Este cambio afecta solamente la hora de inicio. Las ventanas y calendarios de los datos continúan
+usando UTC-4 fijo para conservar compatibilidad con el procesamiento histórico.
 
 ## Troubleshooting
 

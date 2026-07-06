@@ -1,4 +1,5 @@
-schedule_hour: 1
+schedule_timezone: America/Santiago
+schedule_hour: 0
 schedule_minute: 30
 schedule_start_month: 5
 schedule_start_day: 2

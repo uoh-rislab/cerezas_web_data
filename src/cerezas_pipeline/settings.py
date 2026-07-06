@@ -38,6 +38,7 @@ class Settings:
     sensor_models: dict[str, str]
     excluded_device_ids: set[str]
     excluded_device_patterns: tuple[re.Pattern[str], ...]
+    schedule_timezone: str
     schedule_hour: int
     schedule_minute: int
     schedule_start_month: int
@@ -103,6 +104,7 @@ def load_settings(config_dir: Optional[Union[str, Path]] = None) -> Settings:
         excluded_device_patterns=tuple(
             re.compile(value, re.IGNORECASE) for value in filters.get("excluded_device_patterns", [])
         ),
+        schedule_timezone=str(pipeline.get("schedule_timezone", "America/Santiago")),
         schedule_hour=int(pipeline["schedule_hour"]),
         schedule_minute=int(pipeline["schedule_minute"]),
         schedule_start_month=int(pipeline["schedule_start_month"]),

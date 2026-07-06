@@ -9,8 +9,9 @@ validar resultados. Este repositorio contiene la nueva implementación desplegab
 ## Programación
 
 El servicio permanece activo todo el año, pero solamente despacha ejecuciones entre el **2 de mayo**
-y el **1 de noviembre**, ambas fechas inclusive. La hora de ejecución es siempre **01:30 UTC-4 fijo**,
-equivalente a `05:30 UTC`.
+y el **1 de noviembre**, ambas fechas inclusive. La ejecución comienza a las **00:30 hora de Chile**
+usando `America/Santiago`, por lo que se adapta automáticamente al horario de verano e invierno.
+Si el cambio de hora elimina las 00:30 de un día, se ejecuta en el primer minuto local válido.
 
 | Día | Ejecución |
 |---|---|

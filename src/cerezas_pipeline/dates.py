@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
 from enum import Enum
+from zoneinfo import ZoneInfo
 
 
 class RunKind(str, Enum):
@@ -12,6 +13,7 @@ class RunKind(str, Enum):
 
 
 FIXED_CHILE_TZ = timezone(timedelta(hours=-4), name="UTC-04:00")
+CHILE_TIMEZONE = "America/Santiago"
 
 
 @dataclass(frozen=True)
@@ -78,5 +80,22 @@ def window_for(
     )
 
 
-def fixed_now() -> datetime:
-    return datetime.now(timezone.utc).astimezone(FIXED_CHILE_TZ)
+def chile_now() -> datetime:
+    return datetime.now(ZoneInfo(CHILE_TIMEZONE))
+
+
+def scheduled_datetime(
+    day: date,
+    hour: int,
+    minute: int,
+    timezone_name: str = CHILE_TIMEZONE,
+) -> datetime:
+    zone = ZoneInfo(timezone_name)
+    requested = datetime.combine(day, time(hour, minute))
+    for offset in range(181):
+        local_naive = requested + timedelta(minutes=offset)
+        candidate = local_naive.replace(tzinfo=zone)
+        round_trip = candidate.astimezone(timezone.utc).astimezone(zone)
+        if round_trip.replace(tzinfo=None) == local_naive:
+            return candidate
+    raise RuntimeError(f"No se encontró una hora local válida para {requested} en {timezone_name}")

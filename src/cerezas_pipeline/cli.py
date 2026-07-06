@@ -8,7 +8,7 @@ from datetime import date
 from pathlib import Path
 
 from .artifacts import RunPaths
-from .dates import RunKind, fixed_now, kinds_for_scheduled_date, window_for
+from .dates import RunKind, chile_now, kinds_for_scheduled_date, window_for
 from .email_delivery.config import load_email_settings
 from .email_delivery.service import deliver_kind
 from .pdf_report import generate_all_pdfs
@@ -59,7 +59,7 @@ def _parser() -> argparse.ArgumentParser:
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     arguments = _parser().parse_args()
-    scheduled_date = getattr(arguments, "scheduled_date", None) or fixed_now().date()
+    scheduled_date = getattr(arguments, "scheduled_date", None) or chile_now().date()
 
     if arguments.command == "plan":
         payload = []

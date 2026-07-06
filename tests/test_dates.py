@@ -1,7 +1,7 @@
 import unittest
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
-from cerezas_pipeline.dates import RunKind, kinds_for_scheduled_date, window_for
+from cerezas_pipeline.dates import RunKind, kinds_for_scheduled_date, scheduled_datetime, window_for
 
 
 class ScheduleTests(unittest.TestCase):
@@ -50,6 +50,22 @@ class WindowTests(unittest.TestCase):
         self.assertEqual(window.start_utc, datetime(2026, 5, 1, 4, tzinfo=timezone.utc))
         self.assertEqual(window.end_utc, datetime(2026, 7, 1, 3, 59, 59, 999999, tzinfo=timezone.utc))
 
+
+class ChileScheduleTimezoneTests(unittest.TestCase):
+    def test_schedule_uses_summer_and_winter_offsets(self):
+        summer = scheduled_datetime(date(2026, 1, 15), 0, 30)
+        winter = scheduled_datetime(date(2026, 7, 15), 0, 30)
+
+        self.assertEqual(summer.utcoffset(), timedelta(hours=-3))
+        self.assertEqual(winter.utcoffset(), timedelta(hours=-4))
+        self.assertEqual(summer.astimezone(timezone.utc).hour, 3)
+        self.assertEqual(winter.astimezone(timezone.utc).hour, 4)
+
+    def test_nonexistent_midnight_runs_at_first_valid_minute(self):
+        transition_day = scheduled_datetime(date(2026, 9, 6), 0, 30)
+
+        self.assertEqual((transition_day.hour, transition_day.minute), (1, 0))
+        self.assertEqual(transition_day.utcoffset(), timedelta(hours=-3))
 
 if __name__ == "__main__":
     unittest.main()
