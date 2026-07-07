@@ -13,6 +13,7 @@ from .email_delivery.config import load_email_settings
 from .email_delivery.service import deliver_kind
 from .pdf_report import generate_all_pdfs
 from .pipeline import run_pipeline
+from .report_metadata import backfill_report_metadata
 from .scheduler import run_scheduler
 from .settings import load_settings
 
@@ -47,6 +48,14 @@ def _parser() -> argparse.ArgumentParser:
     email.add_argument("--scheduled-date", type=_date, required=True)
     email.add_argument("--site", help="Limitar a un site ID")
     email.add_argument("--send", action="store_true", help="Enviar realmente mediante el método configurado")
+
+    metadata = subparsers.add_parser(
+        "metadata-backfill",
+        help="Registrar metadata Mongo para PDFs existentes",
+    )
+    metadata.add_argument("--year", type=int, required=True)
+    metadata.add_argument("--kind", choices=[kind.value for kind in RunKind], action="append")
+    metadata.add_argument("--dry-run", action="store_true")
 
     plan = subparsers.add_parser("plan", help="Mostrar ejecuciones y ventanas sin conectarse")
     plan.add_argument("--scheduled-date", type=_date, default=None)
@@ -107,6 +116,15 @@ def main() -> None:
         results = deliver_kind(
             settings, email_settings, scheduled_date, RunKind(arguments.kind),
             send=arguments.send, site_filter=arguments.site,
+        )
+        print(json.dumps(results, ensure_ascii=False, indent=2))
+    elif arguments.command == "metadata-backfill":
+        kinds = tuple(RunKind(value) for value in arguments.kind) if arguments.kind else None
+        results = backfill_report_metadata(
+            settings,
+            year=arguments.year,
+            kinds=kinds,
+            dry_run=arguments.dry_run,
         )
         print(json.dumps(results, ensure_ascii=False, indent=2))
     elif arguments.command == "schedule":

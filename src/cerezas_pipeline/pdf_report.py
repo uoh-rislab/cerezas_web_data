@@ -12,6 +12,7 @@ import yaml
 
 from .artifacts import RunPaths
 from .dates import RunKind, RunWindow
+from .report_metadata import insert_report_metadata
 from .settings import Settings, Site
 
 
@@ -181,7 +182,8 @@ def generate_site_pdf(settings: Settings, site: Site, window: RunWindow, paths: 
         output = _daily_or_weekly(site, window, paths, root)
     else:
         output = _monthly_comparison(site, window, paths, root)
-    return {"site": site.site_id, "generated": True, "path": str(output)}
+    metadata = insert_report_metadata(settings, site, window)
+    return {"site": site.site_id, "generated": True, "path": str(output), "metadata": metadata}
 
 
 def generate_all_pdfs(settings: Settings, window: RunWindow, paths: RunPaths) -> list[dict[str, Any]]:

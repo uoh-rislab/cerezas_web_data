@@ -10,6 +10,12 @@ season_start_day: 1
 catchup_days: 7
 retry_minutes: 15
 
+report_metadata:
+  enabled: true
+  database: FIC_CEREZAS_HORAS_FRIO
+  zone: ""
+  timezone: America/Santiago
+
 mongo:
   host: 127.0.0.1
   port: 27017

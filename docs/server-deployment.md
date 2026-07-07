@@ -413,6 +413,58 @@ Scheduler activo: 00:30 America/Santiago
 Este cambio afecta solamente la hora de inicio. Las ventanas y calendarios de los datos continúan
 usando UTC-4 fijo para conservar compatibilidad con el procesamiento histórico.
 
+## 20. Metadata Mongo de boletines
+
+Después de generar cada PDF, el pipeline registra metadata en MongoDB si `report_metadata.enabled`
+está activo en la configuración externa:
+
+```bash
+nano /home/uoh/cerezas_web_server/config/climate-reporting/pipeline.yaml
+```
+
+Bloque esperado:
+
+```yaml
+report_metadata:
+  enabled: true
+  database: FIC_CEREZAS_HORAS_FRIO
+  zone: ""
+  timezone: America/Santiago
+```
+
+Cada documento se inserta en la colección cuyo nombre coincide con el `site_id`, por ejemplo
+`fic2-graneros-agrofurore`, e incluye:
+
+```json
+{
+  "data-field": "fic2-graneros-agrofurore",
+  "zone": "",
+  "in-date": "1765422000",
+  "out-date": "1765422000",
+  "name": "1",
+  "kind": "daily"
+}
+```
+
+El campo `kind` distingue `daily`, `weekly` y `monthly`. El campo `name` se calcula buscando el
+máximo existente en la colección y usando `max + 1`. Si ya existe metadata para el mismo
+`data-field`, `zone`, período y `kind`, no se inserta un duplicado.
+
+Para registrar metadata de todos los PDFs ya disponibles de 2026:
+
+```bash
+docker compose run --rm climate-reporting metadata-backfill --year 2026 --dry-run
+docker compose run --rm climate-reporting metadata-backfill --year 2026
+```
+
+También se puede filtrar por tipo:
+
+```bash
+docker compose run --rm climate-reporting metadata-backfill --year 2026 --kind daily
+docker compose run --rm climate-reporting metadata-backfill --year 2026 --kind weekly
+docker compose run --rm climate-reporting metadata-backfill --year 2026 --kind monthly
+```
+
 ## Troubleshooting
 
 ### Error `exec: "plan": executable file not found`

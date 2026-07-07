@@ -27,12 +27,21 @@ class MongoSettings:
     fic2_collection_prefix: str
 
 
+@dataclass(frozen=True)
+class ReportMetadataSettings:
+    enabled: bool
+    database: str
+    zone: str
+    timezone: str
+
+
 @dataclass
 class Settings:
     config_dir: Path
     data_root: Path
     assets_dir: Path
     mongo: MongoSettings
+    report_metadata: ReportMetadataSettings
     sites: dict[str, Site]
     stations: dict[str, dict[str, Any]]
     sensor_models: dict[str, str]
@@ -87,6 +96,7 @@ def load_settings(config_dir: Optional[Union[str, Path]] = None) -> Settings:
         for site_id, values in sites_raw.items()
     }
     filters = pipeline.get("sensor_filters", {})
+    report_metadata = pipeline.get("report_metadata", {})
     return Settings(
         config_dir=directory,
         data_root=Path(os.getenv("CEREZAS_DATA_ROOT", pipeline["paths"]["data_root"])),
@@ -96,6 +106,12 @@ def load_settings(config_dir: Optional[Union[str, Path]] = None) -> Settings:
             database=mongo_raw["database"],
             fic1_collections=tuple(mongo_raw["fic1_collections"]),
             fic2_collection_prefix=mongo_raw["fic2_collection_prefix"],
+        ),
+        report_metadata=ReportMetadataSettings(
+            enabled=bool(report_metadata.get("enabled", False)),
+            database=str(report_metadata.get("database", "FIC_CEREZAS_HORAS_FRIO")),
+            zone=str(report_metadata.get("zone", "")),
+            timezone=str(report_metadata.get("timezone", "America/Santiago")),
         ),
         sites=sites,
         stations=stations,

@@ -42,6 +42,7 @@ Cada ejecución realiza estas etapas en orden:
 5. Conversión a CSV con calendario UTC-4 fijo.
 6. Cálculo de HF, PF, UF y HC.
 7. Generación de un PDF por beneficiario.
+8. Registro de metadata del boletín en MongoDB, si `report_metadata.enabled` está activo.
 
 Los resultados persisten en:
 
@@ -64,6 +65,10 @@ Los resultados persisten en:
 - `config/stations.yaml`: coordenadas usadas para Meteostat.
 - `config/email.yaml`: horario, remitente, destinatarios y copias de los boletines.
 - Los logos originales se versionan en `assets/` y se incorporan automáticamente a la imagen.
+
+La metadata de boletines se configura en `report_metadata` dentro de `config/pipeline.yaml`. Por
+defecto registra cada boletín generado en la base `FIC_CEREZAS_HORAS_FRIO`, usando como colección el
+`site_id` del beneficiario, y agrega el campo `kind` para distinguir `daily`, `weekly` y `monthly`.
 
 Locations y filtros están desacoplados del procesamiento. Los filtros aceptan IDs exactos o
 expresiones regulares en `sensor_filters`, por lo que no se requiere cambiar código para excluir
