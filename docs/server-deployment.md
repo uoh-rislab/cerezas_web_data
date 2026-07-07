@@ -416,7 +416,7 @@ usando UTC-4 fijo para conservar compatibilidad con el procesamiento histórico.
 ## 20. Metadata Mongo de boletines
 
 Después de generar cada PDF, el pipeline registra metadata en MongoDB si `report_metadata.enabled`
-está activo en la configuración externa:
+está activo en la configuración externa.
 
 ```bash
 nano /home/uoh/cerezas_web_server/config/climate-reporting/pipeline.yaml
@@ -464,6 +464,22 @@ docker compose run --rm climate-reporting metadata-backfill --year 2026 --kind d
 docker compose run --rm climate-reporting metadata-backfill --year 2026 --kind weekly
 docker compose run --rm climate-reporting metadata-backfill --year 2026 --kind monthly
 ```
+
+El detalle del formato insertado, idempotencia y comandos de verificación está en
+[report-metadata.md](report-metadata.md).
+
+## 21. Checklist de producción
+
+Antes de dejar el servicio en producción, ejecutar la validación paso a paso descrita en
+[production-validation.md](production-validation.md). Esa guía verifica:
+
+- configuración externa montada en el contenedor;
+- scheduler y ventana de temporada;
+- MongoDB;
+- generación de PDFs;
+- metadata;
+- preview y envío controlado de correos;
+- limpieza de registros de test.
 
 ## Troubleshooting
 

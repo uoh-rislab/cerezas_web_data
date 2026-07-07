@@ -170,14 +170,12 @@ La imagen incluye `sh`; Bash no es necesario para operar o diagnosticar el servi
 
 ## Validación en el servidor
 
-El procedimiento completo de instalación, pruebas, activación y troubleshooting está disponible
-en [docs/server-deployment.md](docs/server-deployment.md).
+Documentación operativa:
 
-La integración opcional con Gmail, deshabilitada por defecto, se documenta en
-[docs/email-delivery.md](docs/email-delivery.md). Está preparada para enviar cada PDF a sus
-destinatarios a las 05:00 hora de Chile, respetando automáticamente horario de verano e invierno.
-Actualmente está configurada para Gmail SMTP con App Password; Gmail API con Service Account queda
-disponible como alternativa.
+- [Instalación y despliegue en servidor](docs/server-deployment.md).
+- [Envío programado de correos](docs/email-delivery.md).
+- [Metadata Mongo de boletines](docs/report-metadata.md).
+- [Checklist de validación en producción](docs/production-validation.md).
 
 Antes de activar el scheduler en producción:
 
