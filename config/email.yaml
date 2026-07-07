@@ -1,37 +1,35 @@
 enabled: false
-# Options: gmail_api or smtp.
-delivery_method: gmail_api
+# Options: smtp or gmail_api.
+delivery_method: smtp
 timezone: America/Santiago
-send_hour: 4
-send_minute: 0
+send_hour: 1
+send_minute: 5
 retry_minutes: 30
 
 sender:
-  display_name: Universidad de O'Higgins - Proyecto FIC Cerezas
-  # Sender address used in the From header. For gmail_api, this is usually the same as delegated_user.
-  email: ""
+  display_name: UOH Cerezas
+  email: cerezas@uoh.cl
   delegated_user: ""
   service_account_file: /run/secrets/gmail-service-account.json
 
-# Alternative delivery method: SMTP + Gmail App Password.
-# To use it, set delivery_method: smtp, configure sender.email and smtp.username,
-# and provide the password through the GMAIL_APP_PASSWORD environment variable.
+# Default delivery method: Gmail SMTP + App Password.
+# Store the App Password outside Git in the service .env as GMAIL_APP_PASSWORD.
 smtp:
   host: smtp.gmail.com
   port: 587
-  username: ""
+  username: cerezas@uoh.cl
   password_env: GMAIL_APP_PASSWORD
   password_file: ""
   use_starttls: true
   timeout_seconds: 30
 
-global_cc:
-  - name: Daniel Casagrande
-    email: daniel.casagrande@uoh.cl
-  - name: Jaime Varas
-    email: jaime.varas@uoh.cl
-  - name: Luis Gustavo Cossio Montefinale
-    email: luis.cossio@uoh.cl
+global_cc: []
+#  - name: Daniel Casagrande
+#    email: daniel.casagrande@uoh.cl
+#  - name: Jaime Varas
+#    email: jaime.varas@uoh.cl
+#  - name: Luis Gustavo Cossio Montefinale
+#    email: luis.cossio@uoh.cl
 
 # Each generated PDF is sent separately using its site ID.
 # Add primary recipients under `to`; site-specific `cc` entries are appended to global_cc.

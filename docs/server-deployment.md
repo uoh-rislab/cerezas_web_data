@@ -371,7 +371,7 @@ Los datos permanecen fuera del repositorio en:
 
 La integración está incluida pero deshabilitada por defecto, por lo que no modifica el servicio
 actual. La configuración de destinatarios, la cuenta de servicio, la prueba controlada y la
-activación de los envíos a las 04:00 hora de Chile se detallan en
+activación de los envíos a las 01:05 hora de Chile se detallan en
 [email-delivery.md](email-delivery.md).
 
 ## 19. Horario del scheduler

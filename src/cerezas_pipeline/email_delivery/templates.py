@@ -12,6 +12,8 @@ MONTHS = {
     7: "Julio", 8: "Agosto", 9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre",
 }
 
+PROJECT_LINE = '"Transferencia tecnologías 4.0 para la gestión del riesgo en la cadena de valor de la cereza"'
+
 
 @dataclass(frozen=True)
 class EmailTemplate:
@@ -36,31 +38,25 @@ def _month(value: date) -> str:
 def build_email_template(kind: RunKind, report_date: date) -> EmailTemplate:
     if kind == RunKind.DAILY:
         period = _daily_date(report_date)
-        subject = f"UOH Cerezas - Boletín diario de monitoreo agroclimático: {period}"
+        subject = f"Boletín diario de monitoreo agroclimático: {period}"
         description = (
             "nos complace informar que a través de este medio hacemos envío del Boletín Diario "
             "de Monitoreo Agroclimático correspondiente a la presente semana."
         )
-        project = '<br>"Transferencia tecnologías 4.0 para la gestión del riesgo en la cadena de valor de la cereza"'
-        project_plain = '\n"Transferencia tecnologías 4.0 para la gestión del riesgo en la cadena de valor de la cereza"'
     elif kind == RunKind.WEEKLY:
         period = _weekly_range(report_date)
-        subject = f"UOH Cerezas - Boletín semanal de monitoreo agroclimático: {period}"
+        subject = f"Boletín semanal de monitoreo agroclimático: {period}"
         description = (
             "nos complace informar que a través de este medio hacemos envío del Boletín Semanal "
             f"de Monitoreo Agroclimático correspondiente al período {period}."
         )
-        project = ""
-        project_plain = ""
     else:
         period = _month(report_date)
-        subject = f"UOH Cerezas - Boletín mensual monitoreo agroclimático {period}"
+        subject = f"Boletín mensual monitoreo agroclimático {period}"
         description = (
             "nos complace informar que a través de este medio hacemos envío del Boletín Mensual "
             f"de Monitoreo Agroclimático correspondiente a {period}."
         )
-        project = ""
-        project_plain = ""
 
     plain = (
         "Estimada/os,\n\n"
@@ -68,7 +64,7 @@ def build_email_template(kind: RunKind, report_date: date) -> EmailTemplate:
         "Estaremos atentos a su retroalimentación\n\n"
         "Un cordial saludo,\n--\n"
         "Universidad de O'Higgins - Proyecto FIC Cerezas"
-        f"{project_plain}\n"
+        f"\n{PROJECT_LINE}\n"
     )
     html = f"""\
 <html><body style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#222">
@@ -76,7 +72,7 @@ def build_email_template(kind: RunKind, report_date: date) -> EmailTemplate:
 <p>Muy buenos días. Junto con saludar, {escape(description)}</p>
 <p>Estaremos atentos a su retroalimentación</p>
 <p>Un cordial saludo,</p>
-<p>--<br><strong>Universidad de O'Higgins - Proyecto FIC Cerezas</strong>{project}</p>
+<p>--<br><strong>Universidad de O'Higgins - Proyecto FIC Cerezas</strong><br><em>{escape(PROJECT_LINE, quote=False)}</em></p>
 <p><img src="cid:fic-logo" alt="Universidad de O'Higgins - Proyecto FIC Cerezas" style="max-width:620px;height:auto"></p>
 </body></html>
 """

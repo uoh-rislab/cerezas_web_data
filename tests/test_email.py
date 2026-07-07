@@ -4,7 +4,7 @@ from datetime import date
 from pathlib import Path
 
 from cerezas_pipeline.dates import RunKind
-from cerezas_pipeline.email_delivery.templates import build_email_template
+from cerezas_pipeline.email_delivery.templates import PROJECT_LINE, build_email_template
 
 try:
     import yaml  # noqa: F401
@@ -17,10 +17,11 @@ class EmailTemplateTests(unittest.TestCase):
         template = build_email_template(RunKind.DAILY, date(2026, 6, 29))
         self.assertEqual(
             template.subject,
-            "UOH Cerezas - Boletín diario de monitoreo agroclimático: 29 Junio del 2026",
+            "Boletín diario de monitoreo agroclimático: 29 Junio del 2026",
         )
         self.assertIn("correspondiente a la presente semana", template.plain)
         self.assertIn("<strong>Universidad de O'Higgins - Proyecto FIC Cerezas</strong>", template.html)
+        self.assertIn(f"<em>{PROJECT_LINE}</em>", template.html)
         self.assertIn('src="cid:fic-logo"', template.html)
         self.assertIn("Transferencia tecnologías 4.0", template.plain)
 
@@ -29,17 +30,21 @@ class EmailTemplateTests(unittest.TestCase):
         period = "22 Junio - 28 Junio del 2026"
         self.assertEqual(
             template.subject,
-            f"UOH Cerezas - Boletín semanal de monitoreo agroclimático: {period}",
+            f"Boletín semanal de monitoreo agroclimático: {period}",
         )
         self.assertIn(f"correspondiente al período {period}", template.plain)
+        self.assertIn(PROJECT_LINE, template.plain)
+        self.assertIn(f"<em>{PROJECT_LINE}</em>", template.html)
 
     def test_monthly_template(self):
         template = build_email_template(RunKind.MONTHLY, date(2025, 6, 30))
         self.assertEqual(
             template.subject,
-            "UOH Cerezas - Boletín mensual monitoreo agroclimático Junio 2025",
+            "Boletín mensual monitoreo agroclimático Junio 2025",
         )
         self.assertIn("correspondiente a Junio 2025", template.plain)
+        self.assertIn(PROJECT_LINE, template.plain)
+        self.assertIn(f"<em>{PROJECT_LINE}</em>", template.html)
 
 
 class EmailConfigTests(unittest.TestCase):
