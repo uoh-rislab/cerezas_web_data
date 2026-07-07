@@ -260,6 +260,51 @@ El comando responde con `status: sent`. Con Gmail API incluye el identificador r
 SMTP registra `smtp-accepted` cuando el servidor SMTP acepta el mensaje. Un segundo intento con la
 misma fecha, tipo y site responde `already sent`.
 
+## Revisar últimos correos enviados
+
+Para auditar destinatarios sin enviar nada, el CLI incluye un comando solo lectura que consulta la
+carpeta de enviados por IMAP usando la misma cuenta SMTP y el mismo `GMAIL_APP_PASSWORD`.
+
+Requisitos:
+
+- IMAP debe estar habilitado para la casilla Gmail/Workspace remitente.
+- `smtp.username` debe corresponder a la casilla que se quiere auditar.
+- `GMAIL_APP_PASSWORD` debe estar disponible en `.env` o `smtp.password_file`.
+
+Ver los últimos 10 correos enviados:
+
+```bash
+docker compose run --rm climate-reporting email-sent --limit 10
+```
+
+La respuesta incluye fecha, destinatarios, copias y asunto:
+
+```json
+[
+  {
+    "date": "Tue, 7 Jul 2026 01:15:00 -0400",
+    "to": "Nombre Beneficiario <beneficiario@example.com>",
+    "cc": "",
+    "bcc": "",
+    "subject": "Boletín diario de monitoreo agroclimático: 29 Junio del 2026"
+  }
+]
+```
+
+Por defecto se consulta la carpeta Gmail:
+
+```text
+"[Gmail]/Sent Mail"
+```
+
+Si la casilla expone otra ruta IMAP para enviados, se puede indicar manualmente:
+
+```bash
+docker compose run --rm climate-reporting email-sent \
+  --limit 10 \
+  --mailbox '"[Gmail]/Sent Mail"'
+```
+
 ## Activar el envío programado
 
 Una vez aprobada la prueba con SMTP:
