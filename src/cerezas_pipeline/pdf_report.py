@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import logging
 from contextlib import contextmanager
 from datetime import timedelta
 from pathlib import Path
@@ -15,6 +16,8 @@ from .dates import RunKind, RunWindow
 from .report_metadata import insert_report_metadata
 from .settings import Settings, Site
 
+
+LOGGER = logging.getLogger(__name__)
 
 SPANISH_MONTHS = {
     1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril", 5: "Mayo", 6: "Junio",
@@ -176,13 +179,34 @@ def generate_site_pdf(settings: Settings, site: Site, window: RunWindow, paths: 
     report = pd.read_csv(paths.reports / f"{site.site_id}.csv")
     sensor_columns = [column for column in report.columns if column.startswith("A8") and " " not in column]
     if report.empty or not sensor_columns:
+        LOGGER.info(
+            "PDF %s %s %s: skipped sin datos",
+            window.kind.value,
+            window.report_date.isoformat(),
+            site.site_id,
+        )
         return {"site": site.site_id, "generated": False, "reason": "sin datos"}
     _write_locations(site, window, paths, root)
     if window.kind in (RunKind.DAILY, RunKind.WEEKLY):
         output = _daily_or_weekly(site, window, paths, root)
     else:
         output = _monthly_comparison(site, window, paths, root)
+    LOGGER.info(
+        "PDF %s %s %s: generated %s",
+        window.kind.value,
+        window.report_date.isoformat(),
+        site.site_id,
+        output,
+    )
     metadata = insert_report_metadata(settings, site, window)
+    LOGGER.info(
+        "Metadata %s %s %s: %s name=%s",
+        window.kind.value,
+        window.report_date.isoformat(),
+        site.site_id,
+        metadata.get("status"),
+        metadata.get("name", ""),
+    )
     return {"site": site.site_id, "generated": True, "path": str(output), "metadata": metadata}
 
 

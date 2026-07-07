@@ -340,6 +340,13 @@ Después de una ejecución:
 Completado daily para YYYY-MM-DD
 ```
 
+Durante generación de boletines:
+
+```text
+PDF daily 2026-06-29 fic1-rengo-agritorre: generated /data/runs/...
+Metadata daily 2026-06-29 fic1-rengo-agritorre: inserted name=...
+```
+
 Después de correos:
 
 ```text
