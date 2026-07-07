@@ -41,7 +41,14 @@ Editar el archivo de configuración persistente del servidor:
 nano /home/uoh/cerezas_web_server/config/climate-reporting/email.yaml
 ```
 
-Ejemplo para un beneficiario:
+Ejemplo para un beneficiario usando direcciones simples:
+
+```yaml
+sites:
+  fic1-rengo-agritorre: {to: [beneficiario@example.com, otro@example.com], cc: []}
+```
+
+También se puede usar el formato con nombre:
 
 ```yaml
 sites:
@@ -58,6 +65,7 @@ sites:
 - `cc` contiene copias específicas de ese beneficiario.
 - `global_cc` contiene las copias aplicadas a todos los mensajes.
 - Las direcciones repetidas en CC se eliminan automáticamente.
+- Los destinatarios pueden escribirse como strings simples o como objetos `{name, email}`.
 
 Por ahora, YAML es la opción más simple, auditable y segura. Más adelante se puede reemplazar la
 fuente de destinatarios por Google Sheets sin modificar las plantillas ni el envío. Un dashboard

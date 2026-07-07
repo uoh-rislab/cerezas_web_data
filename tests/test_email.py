@@ -103,6 +103,34 @@ smtp:
         self.assertEqual(settings.smtp_username, "sender@example.com")
         self.assertEqual(settings.smtp_password_env, "SMTP_PASSWORD")
 
+    @unittest.skipIf(yaml is None, "PyYAML is not installed in the host Python")
+    def test_string_recipients_are_loaded(self):
+        from cerezas_pipeline.email_delivery.config import load_email_settings
+
+        content = """\
+enabled: true
+global_cc: [global@example.com]
+sites:
+  fic1-rengo-agritorre: {to: [carlos.figueroa@agritorre.cl, mauricio.suarez@agritorre.cl], cc: []}
+  fic2-rengo-donajaviera: {to: [ccamilla@live.cl, calbupanqui@gmail.com], cc: [local@example.com]}
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            Path(directory, "email.yaml").write_text(content, encoding="utf-8")
+            settings = load_email_settings(Path(directory))
+
+        agritorre = settings.recipients_for("fic1-rengo-agritorre")
+        self.assertEqual(
+            [value.email for value in agritorre.to],
+            ["carlos.figueroa@agritorre.cl", "mauricio.suarez@agritorre.cl"],
+        )
+        self.assertEqual([value.email for value in agritorre.cc], ["global@example.com"])
+
+        dona_javiera = settings.recipients_for("fic2-rengo-donajaviera")
+        self.assertEqual(
+            [value.email for value in dona_javiera.cc],
+            ["global@example.com", "local@example.com"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

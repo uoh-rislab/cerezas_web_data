@@ -46,12 +46,18 @@ class EmailSettings:
         return SiteRecipients(configured.to, _deduplicate(self.global_cc + configured.cc))
 
 
-def _addresses(values: Optional[list[dict[str, Any]]]) -> tuple[EmailAddress, ...]:
-    return tuple(
-        EmailAddress(name=str(value.get("name", "")).strip(), email=str(value["email"]).strip())
-        for value in (values or [])
-        if str(value.get("email", "")).strip()
-    )
+def _addresses(values: Optional[list[Any]]) -> tuple[EmailAddress, ...]:
+    addresses: list[EmailAddress] = []
+    for value in values or []:
+        if isinstance(value, str):
+            email = value.strip()
+            name = ""
+        else:
+            email = str(value.get("email", "")).strip()
+            name = str(value.get("name", "")).strip()
+        if email:
+            addresses.append(EmailAddress(name=name, email=email))
+    return tuple(addresses)
 
 
 def _deduplicate(values: tuple[EmailAddress, ...]) -> tuple[EmailAddress, ...]:
