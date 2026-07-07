@@ -9,7 +9,6 @@ from pathlib import Path
 
 from .artifacts import RunPaths
 from .dates import RunKind, chile_now, kinds_for_scheduled_date, window_for
-from .email_delivery.audit import DEFAULT_SENT_MAILBOX, get_last_sent_recipients
 from .email_delivery.config import load_email_settings
 from .email_delivery.service import deliver_kind
 from .pdf_report import generate_all_pdfs
@@ -48,13 +47,6 @@ def _parser() -> argparse.ArgumentParser:
     email.add_argument("--scheduled-date", type=_date, required=True)
     email.add_argument("--site", help="Limitar a un site ID")
     email.add_argument("--send", action="store_true", help="Enviar realmente mediante el método configurado")
-
-    email_sent = subparsers.add_parser(
-        "email-sent",
-        help="Listar destinatarios de los últimos correos enviados por la cuenta SMTP",
-    )
-    email_sent.add_argument("--limit", type=int, default=10)
-    email_sent.add_argument("--mailbox", default=DEFAULT_SENT_MAILBOX)
 
     plan = subparsers.add_parser("plan", help="Mostrar ejecuciones y ventanas sin conectarse")
     plan.add_argument("--scheduled-date", type=_date, default=None)
@@ -115,14 +107,6 @@ def main() -> None:
         results = deliver_kind(
             settings, email_settings, scheduled_date, RunKind(arguments.kind),
             send=arguments.send, site_filter=arguments.site,
-        )
-        print(json.dumps(results, ensure_ascii=False, indent=2))
-    elif arguments.command == "email-sent":
-        email_settings = load_email_settings(settings.config_dir)
-        results = get_last_sent_recipients(
-            email_settings,
-            limit=arguments.limit,
-            mailbox=arguments.mailbox,
         )
         print(json.dumps(results, ensure_ascii=False, indent=2))
     elif arguments.command == "schedule":

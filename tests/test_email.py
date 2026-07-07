@@ -4,7 +4,6 @@ from datetime import date
 from pathlib import Path
 
 from cerezas_pipeline.dates import RunKind
-from cerezas_pipeline.email_delivery.audit import decode_text
 from cerezas_pipeline.email_delivery.templates import PROJECT_LINE, build_email_template
 
 try:
@@ -21,6 +20,9 @@ class EmailTemplateTests(unittest.TestCase):
             "Boletín diario de monitoreo agroclimático: 29 Junio del 2026",
         )
         self.assertIn("correspondiente a la presente semana", template.plain)
+        self.assertIn("Junto con saludar,", template.plain)
+        self.assertNotIn("Muy buenos días", template.plain)
+        self.assertNotIn("Muy buenos días", template.html)
         self.assertIn("<strong>Universidad de O'Higgins - Proyecto FIC Cerezas</strong>", template.html)
         self.assertIn(f"<em>{PROJECT_LINE}</em>", template.html)
         self.assertIn('src="cid:fic-logo"', template.html)
@@ -46,14 +48,6 @@ class EmailTemplateTests(unittest.TestCase):
         self.assertIn("correspondiente a Junio 2025", template.plain)
         self.assertIn(PROJECT_LINE, template.plain)
         self.assertIn(f"<em>{PROJECT_LINE}</em>", template.html)
-
-
-class EmailAuditTests(unittest.TestCase):
-    def test_decode_text_handles_encoded_headers(self):
-        self.assertEqual(
-            decode_text("=?utf-8?q?Bolet=C3=ADn_diario?="),
-            "Boletín diario",
-        )
 
 
 class EmailConfigTests(unittest.TestCase):

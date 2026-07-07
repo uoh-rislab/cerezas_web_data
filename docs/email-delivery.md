@@ -24,12 +24,12 @@ Hay dos métodos de envío disponibles:
 
 ## Horario
 
-El envío automático se intenta a las **01:05 en `America/Santiago`**. A diferencia del pipeline de
+El envío automático se intenta a las **05:00 en `America/Santiago`**. A diferencia del pipeline de
 datos, este horario sigue la hora civil de Chile y, por lo tanto, se adapta automáticamente a los
 cambios entre horario de verano e invierno.
 
 El correo solo se envía cuando el pipeline correspondiente terminó correctamente y su
-`manifest.json` tiene estado `complete`. Si todavía está procesando a las 01:05, el scheduler espera
+`manifest.json` tiene estado `complete`. Si todavía está procesando a las 05:00, el scheduler espera
 y vuelve a comprobarlo. Los mensajes enviados se registran en
 `/data/state/scheduler.db` para evitar duplicados después de un reinicio.
 
@@ -85,8 +85,8 @@ Ejemplo, sin destinatarios sensibles:
 enabled: true
 delivery_method: smtp
 timezone: America/Santiago
-send_hour: 1
-send_minute: 5
+send_hour: 5
+send_minute: 0
 retry_minutes: 30
 
 sender:
@@ -259,51 +259,6 @@ docker compose -f compose.yaml -f compose.email.yaml run --rm climate-reporting 
 El comando responde con `status: sent`. Con Gmail API incluye el identificador real del mensaje; con
 SMTP registra `smtp-accepted` cuando el servidor SMTP acepta el mensaje. Un segundo intento con la
 misma fecha, tipo y site responde `already sent`.
-
-## Revisar últimos correos enviados
-
-Para auditar destinatarios sin enviar nada, el CLI incluye un comando solo lectura que consulta la
-carpeta de enviados por IMAP usando la misma cuenta SMTP y el mismo `GMAIL_APP_PASSWORD`.
-
-Requisitos:
-
-- IMAP debe estar habilitado para la casilla Gmail/Workspace remitente.
-- `smtp.username` debe corresponder a la casilla que se quiere auditar.
-- `GMAIL_APP_PASSWORD` debe estar disponible en `.env` o `smtp.password_file`.
-
-Ver los últimos 10 correos enviados:
-
-```bash
-docker compose run --rm climate-reporting email-sent --limit 10
-```
-
-La respuesta incluye fecha, destinatarios, copias y asunto:
-
-```json
-[
-  {
-    "date": "Tue, 7 Jul 2026 01:15:00 -0400",
-    "to": "Nombre Beneficiario <beneficiario@example.com>",
-    "cc": "",
-    "bcc": "",
-    "subject": "Boletín diario de monitoreo agroclimático: 29 Junio del 2026"
-  }
-]
-```
-
-Por defecto se consulta la carpeta Gmail:
-
-```text
-"[Gmail]/Sent Mail"
-```
-
-Si la casilla expone otra ruta IMAP para enviados, se puede indicar manualmente:
-
-```bash
-docker compose run --rm climate-reporting email-sent \
-  --limit 10 \
-  --mailbox '"[Gmail]/Sent Mail"'
-```
 
 ## Activar el envío programado
 

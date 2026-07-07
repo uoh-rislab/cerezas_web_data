@@ -67,7 +67,7 @@ def _deduplicate(values: tuple[EmailAddress, ...]) -> tuple[EmailAddress, ...]:
 
 def disabled_email_settings() -> EmailSettings:
     return EmailSettings(
-        False, "gmail_api", "America/Santiago", 4, 0, 30, "", "", "", Path(""),
+        False, "gmail_api", "America/Santiago", 5, 0, 30, "", "", "", Path(""),
         "smtp.gmail.com", 587, "", "GMAIL_APP_PASSWORD", Path(""), True, 30, (), {}
     )
 
@@ -91,7 +91,7 @@ def load_email_settings(config_dir: Path) -> EmailSettings:
         enabled=bool(raw.get("enabled", False)),
         delivery_method=str(raw.get("delivery_method", "gmail_api")).strip().lower(),
         timezone=str(raw.get("timezone", "America/Santiago")),
-        send_hour=int(raw.get("send_hour", 4)),
+        send_hour=int(raw.get("send_hour", 5)),
         send_minute=int(raw.get("send_minute", 0)),
         retry_minutes=int(raw.get("retry_minutes", 30)),
         sender_display_name=str(sender.get("display_name", "")),

@@ -28,13 +28,13 @@ class ScheduleTests(unittest.TestCase):
         self.assertEqual(kinds_for_scheduled_date(date(2026, 5, 1)), [])
         self.assertEqual(kinds_for_scheduled_date(date(2026, 5, 2)), [RunKind.DAILY])
 
-    def test_schedule_ends_on_november_first(self):
-        self.assertEqual(kinds_for_scheduled_date(date(2026, 10, 31)), [RunKind.DAILY])
+    def test_schedule_ends_on_september_second(self):
         self.assertEqual(
-            kinds_for_scheduled_date(date(2026, 11, 1)),
+            kinds_for_scheduled_date(date(2026, 9, 1)),
             [RunKind.DAILY, RunKind.MONTHLY],
         )
-        self.assertEqual(kinds_for_scheduled_date(date(2026, 11, 2)), [])
+        self.assertEqual(kinds_for_scheduled_date(date(2026, 9, 2)), [RunKind.DAILY])
+        self.assertEqual(kinds_for_scheduled_date(date(2026, 9, 3)), [])
 
 
 class WindowTests(unittest.TestCase):

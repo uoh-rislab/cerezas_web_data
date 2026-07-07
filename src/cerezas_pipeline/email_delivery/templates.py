@@ -60,7 +60,7 @@ def build_email_template(kind: RunKind, report_date: date) -> EmailTemplate:
 
     plain = (
         "Estimada/os,\n\n"
-        f"Muy buenos días. Junto con saludar, {description}\n\n"
+        f"Junto con saludar, {description}\n\n"
         "Estaremos atentos a su retroalimentación\n\n"
         "Un cordial saludo,\n--\n"
         "Universidad de O'Higgins - Proyecto FIC Cerezas"
@@ -69,7 +69,7 @@ def build_email_template(kind: RunKind, report_date: date) -> EmailTemplate:
     html = f"""\
 <html><body style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#222">
 <p>Estimada/os,</p>
-<p>Muy buenos días. Junto con saludar, {escape(description)}</p>
+<p>Junto con saludar, {escape(description)}</p>
 <p>Estaremos atentos a su retroalimentación</p>
 <p>Un cordial saludo,</p>
 <p>--<br><strong>Universidad de O'Higgins - Proyecto FIC Cerezas</strong><br><em>{escape(PROJECT_LINE, quote=False)}</em></p>

@@ -2,8 +2,8 @@ enabled: false
 # Options: smtp or gmail_api.
 delivery_method: smtp
 timezone: America/Santiago
-send_hour: 1
-send_minute: 5
+send_hour: 5
+send_minute: 0
 retry_minutes: 30
 
 sender:

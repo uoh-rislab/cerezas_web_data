@@ -9,7 +9,7 @@ validar resultados. Este repositorio contiene la nueva implementación desplegab
 ## Programación
 
 El servicio permanece activo todo el año, pero solamente despacha ejecuciones entre el **2 de mayo**
-y el **1 de noviembre**, ambas fechas inclusive. La ejecución comienza a las **00:30 hora de Chile**
+y el **2 de septiembre**, ambas fechas inclusive. La ejecución comienza a las **00:30 hora de Chile**
 usando `America/Santiago`, por lo que se adapta automáticamente al horario de verano e invierno.
 Si el cambio de hora elimina las 00:30 de un día, se ejecuta en el primer minuto local válido.
 
@@ -19,7 +19,7 @@ Si el cambio de hora elimina las 00:30 de un día, se ejecuta en el primer minut
 | Martes a domingo | daily |
 | Día 1 de cada mes | monthly adicional a daily o weekly |
 
-- Fuera del 2 de mayo al 1 de noviembre no se generan ejecuciones automáticas.
+- Fuera del 2 de mayo al 2 de septiembre no se generan ejecuciones automáticas.
 - Daily y weekly procesan desde el 1 de mayo hasta el día anterior.
 - Monthly presenta el mes calendario inmediatamente anterior y conserva el acumulado de temporada
   desde el 1 de mayo para calcular las métricas y tablas del boletín original. Tanto FIC1 como FIC2
@@ -27,8 +27,8 @@ Si el cambio de hora elimina las 00:30 de un día, se ejecuta en el primer minut
 - Si el contenedor no estaba disponible a la hora programada, recupera las ejecuciones
   pendientes dentro de la ventana configurada.
 
-La última ejecución automática ocurre el 1 de noviembre: procesa datos hasta el 31 de octubre y
-genera el monthly de octubre, además del daily o weekly correspondiente a ese día. Los comandos
+La última ejecución automática ocurre el 2 de septiembre: procesa datos hasta el 1 de septiembre.
+El monthly de agosto se genera el 1 de septiembre junto al daily o weekly correspondiente. Los comandos
 manuales continúan disponibles fuera de temporada.
 
 ## Flujo
@@ -170,7 +170,7 @@ en [docs/server-deployment.md](docs/server-deployment.md).
 
 La integración opcional con Gmail, deshabilitada por defecto, se documenta en
 [docs/email-delivery.md](docs/email-delivery.md). Está preparada para enviar cada PDF a sus
-destinatarios a las 01:05 hora de Chile, respetando automáticamente horario de verano e invierno.
+destinatarios a las 05:00 hora de Chile, respetando automáticamente horario de verano e invierno.
 Actualmente está configurada para Gmail SMTP con App Password; Gmail API con Service Account queda
 disponible como alternativa.
 

@@ -145,16 +145,16 @@ Probar los límites de temporada:
 ```bash
 docker compose run --rm climate-reporting plan --scheduled-date 2026-05-01
 docker compose run --rm climate-reporting plan --scheduled-date 2026-05-02
-docker compose run --rm climate-reporting plan --scheduled-date 2026-11-01
-docker compose run --rm climate-reporting plan --scheduled-date 2026-11-02
+docker compose run --rm climate-reporting plan --scheduled-date 2026-09-02
+docker compose run --rm climate-reporting plan --scheduled-date 2026-09-03
 ```
 
 Resultados esperados:
 
 - `2026-05-01`: ninguna ejecución.
 - `2026-05-02`: `daily`.
-- `2026-11-01`: `daily` y `monthly`.
-- `2026-11-02`: ninguna ejecución.
+- `2026-09-02`: `daily`.
+- `2026-09-03`: ninguna ejecución.
 
 ## 9. Ejecutar una prueba daily
 
@@ -322,7 +322,7 @@ La agenda normal es:
 - Lunes: weekly.
 - Martes a domingo: daily.
 - Día 1: monthly adicional a daily o weekly.
-- Ventana anual: 2 de mayo al 1 de noviembre, ambas fechas inclusive.
+- Ventana anual: 2 de mayo al 2 de septiembre, ambas fechas inclusive.
 
 ## 15. Verificar salud y acceder al contenedor
 
@@ -371,7 +371,7 @@ Los datos permanecen fuera del repositorio en:
 
 La integración está incluida pero deshabilitada por defecto, por lo que no modifica el servicio
 actual. La configuración de destinatarios, la cuenta de servicio, la prueba controlada y la
-activación de los envíos a las 01:05 hora de Chile se detallan en
+activación de los envíos a las 05:00 hora de Chile se detallan en
 [email-delivery.md](email-delivery.md).
 
 ## 19. Horario del scheduler

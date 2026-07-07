@@ -3,8 +3,8 @@ schedule_hour: 0
 schedule_minute: 30
 schedule_start_month: 5
 schedule_start_day: 2
-schedule_end_month: 11
-schedule_end_day: 1
+schedule_end_month: 9
+schedule_end_day: 2
 season_start_month: 5
 season_start_day: 1
 catchup_days: 7

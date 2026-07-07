@@ -33,8 +33,8 @@ def is_in_schedule_window(
     day: date,
     start_month: int = 5,
     start_day: int = 2,
-    end_month: int = 11,
-    end_day: int = 1,
+    end_month: int = 9,
+    end_day: int = 2,
 ) -> bool:
     start = date(day.year, start_month, start_day)
     end = date(day.year, end_month, end_day)
@@ -45,8 +45,8 @@ def kinds_for_scheduled_date(
     day: date,
     start_month: int = 5,
     start_day: int = 2,
-    end_month: int = 11,
-    end_day: int = 1,
+    end_month: int = 9,
+    end_day: int = 2,
 ) -> list[RunKind]:
     """Return no jobs outside the schedule window; otherwise apply daily/weekly/monthly rules."""
     if not is_in_schedule_window(day, start_month, start_day, end_month, end_day):
