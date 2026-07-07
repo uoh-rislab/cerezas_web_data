@@ -70,6 +70,31 @@ sites:
             ["global@example.com", "local@example.com"],
         )
 
+    @unittest.skipIf(yaml is None, "PyYAML is not installed in the host Python")
+    def test_smtp_config_is_loaded(self):
+        from cerezas_pipeline.email_delivery.config import load_email_settings
+
+        content = """\
+enabled: true
+delivery_method: smtp
+sender:
+  display_name: Sender Name
+  email: sender@example.com
+smtp:
+  username: sender@example.com
+  password_env: SMTP_PASSWORD
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            Path(directory, "email.yaml").write_text(content, encoding="utf-8")
+            settings = load_email_settings(Path(directory))
+
+        self.assertEqual(settings.delivery_method, "smtp")
+        self.assertEqual(settings.sender_email, "sender@example.com")
+        self.assertEqual(settings.smtp_host, "smtp.gmail.com")
+        self.assertEqual(settings.smtp_port, 587)
+        self.assertEqual(settings.smtp_username, "sender@example.com")
+        self.assertEqual(settings.smtp_password_env, "SMTP_PASSWORD")
+
 
 if __name__ == "__main__":
     unittest.main()

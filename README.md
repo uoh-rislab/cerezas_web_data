@@ -171,6 +171,7 @@ en [docs/server-deployment.md](docs/server-deployment.md).
 La integración opcional con Gmail, deshabilitada por defecto, se documenta en
 [docs/email-delivery.md](docs/email-delivery.md). Está preparada para enviar cada PDF a sus
 destinatarios a las 04:00 hora de Chile, respetando automáticamente horario de verano e invierno.
+Soporta Gmail API con Service Account o Gmail SMTP con App Password.
 
 Antes de activar el scheduler en producción:
 

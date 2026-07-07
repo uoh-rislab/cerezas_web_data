@@ -7,6 +7,13 @@ hasta que se configuren los destinatarios, la cuenta delegada y `enabled: true` 
 Cada PDF se envía en un mensaje independiente al beneficiario asociado a su `site ID`. Los tres
 contactos globales configurados bajo `global_cc` se agregan en copia a todos los mensajes.
 
+Hay dos métodos de envío disponibles:
+
+- `gmail_api`: Gmail API con Service Account y Domain-wide Delegation. Es el método recomendado
+  para operación institucional de largo plazo.
+- `smtp`: Gmail SMTP con App Password. Es más simple de probar, pero depende de una casilla con
+  verificación en dos pasos y de que Google Workspace permita App Passwords.
+
 ## Horario
 
 El envío automático se intenta a las **04:00 en `America/Santiago`**. A diferencia del pipeline de
@@ -49,7 +56,7 @@ fuente de destinatarios por Google Sheets sin modificar las plantillas ni el env
 conviene cuando además se necesiten permisos, validaciones, historial y una interfaz para usuarios
 no técnicos.
 
-## Preparar Google Workspace
+## Opción A: preparar Google Workspace para Gmail API
 
 Se recomienda una cuenta de servicio con delegación de todo el dominio. La cuenta de servicio no
 envía como sí misma: suplanta exclusivamente la casilla institucional indicada en
@@ -69,13 +76,16 @@ envía como sí misma: suplanta exclusivamente la casilla institucional indicada
 6. Definir en el `email.yaml` persistente la casilla institucional desde la cual se enviará:
 
    ```yaml
+   delivery_method: gmail_api
+
    sender:
      display_name: Universidad de O'Higgins - Proyecto FIC Cerezas
+     email: remitente@uoh.cl
      delegated_user: remitente@uoh.cl
      service_account_file: /run/secrets/gmail-service-account.json
    ```
 
-## Instalar el secreto en el servidor
+## Instalar el secreto JSON para Gmail API
 
 El JSON es un secreto y no debe guardarse en Git ni dentro de la imagen:
 
@@ -95,6 +105,47 @@ GOOGLE_SERVICE_ACCOUNT_HOST_PATH=/home/uoh/cerezas_web_server/secrets/climate-re
 
 `compose.email.yaml` monta el secreto como archivo de solo lectura. Mientras Gmail no esté
 habilitado se puede seguir usando `docker compose` normalmente, sin ese override.
+
+## Opción B: Gmail SMTP con App Password
+
+También se puede enviar mediante SMTP. Para esto no se usa el JSON de Service Account. Se necesita:
+
+1. Una casilla Gmail/Workspace remitente, por ejemplo `cerezas@uoh.cl`.
+2. Verificación en dos pasos activada en esa casilla.
+3. Un **App Password** generado para esa casilla.
+4. Que el administrador de Google Workspace permita el uso de App Passwords.
+
+Configurar `email.yaml` así:
+
+```yaml
+enabled: false
+delivery_method: smtp
+
+sender:
+  display_name: Universidad de O'Higgins - Proyecto FIC Cerezas
+  email: cerezas@uoh.cl
+
+smtp:
+  host: smtp.gmail.com
+  port: 587
+  username: cerezas@uoh.cl
+  password_env: GMAIL_APP_PASSWORD
+  password_file: ""
+  use_starttls: true
+  timeout_seconds: 30
+```
+
+Guardar el App Password fuera de Git. La forma más simple es dejarlo en el `.env` del servicio:
+
+```env
+GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx
+```
+
+Como alternativa, se puede usar un archivo secreto y apuntarlo con `smtp.password_file`; si se usa
+esa vía, el archivo debe montarse dentro del contenedor con Docker Compose.
+
+Con SMTP no es necesario usar `compose.email.yaml` si el App Password está en `.env`, porque
+`compose.yaml` ya carga ese archivo con `env_file`.
 
 ## Actualizar la configuración externa
 
@@ -153,8 +204,20 @@ docker compose -f compose.yaml -f compose.email.yaml run --rm climate-reporting 
   --send
 ```
 
-El comando responde con `status: sent` y el identificador del mensaje Gmail. Un segundo intento con
-la misma fecha, tipo y site responde `already sent`.
+Si se usa `delivery_method: smtp` y la contraseña está en `.env`, el envío de prueba puede ejecutarse
+sin el override de email:
+
+```bash
+docker compose run --rm climate-reporting email \
+  --kind daily \
+  --scheduled-date 2026-06-30 \
+  --site fic1-rengo-agritorre \
+  --send
+```
+
+El comando responde con `status: sent`. Con Gmail API incluye el identificador real del mensaje; con
+SMTP registra `smtp-accepted` cuando el servidor SMTP acepta el mensaje. Un segundo intento con la
+misma fecha, tipo y site responde `already sent`.
 
 ## Activar el envío programado
 

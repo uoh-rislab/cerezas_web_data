@@ -22,13 +22,22 @@ class SiteRecipients:
 @dataclass(frozen=True)
 class EmailSettings:
     enabled: bool
+    delivery_method: str
     timezone: str
     send_hour: int
     send_minute: int
     retry_minutes: int
     sender_display_name: str
+    sender_email: str
     delegated_user: str
     service_account_file: Path
+    smtp_host: str
+    smtp_port: int
+    smtp_username: str
+    smtp_password_env: str
+    smtp_password_file: Path
+    smtp_use_starttls: bool
+    smtp_timeout_seconds: int
     global_cc: tuple[EmailAddress, ...]
     sites: dict[str, SiteRecipients]
 
@@ -57,7 +66,10 @@ def _deduplicate(values: tuple[EmailAddress, ...]) -> tuple[EmailAddress, ...]:
 
 
 def disabled_email_settings() -> EmailSettings:
-    return EmailSettings(False, "America/Santiago", 4, 0, 30, "", "", Path(""), (), {})
+    return EmailSettings(
+        False, "gmail_api", "America/Santiago", 4, 0, 30, "", "", "", Path(""),
+        "smtp.gmail.com", 587, "", "GMAIL_APP_PASSWORD", Path(""), True, 30, (), {}
+    )
 
 
 def load_email_settings(config_dir: Path) -> EmailSettings:
@@ -67,6 +79,7 @@ def load_email_settings(config_dir: Path) -> EmailSettings:
     with path.open(encoding="utf-8") as handle:
         raw = yaml.safe_load(handle) or {}
     sender = raw.get("sender") or {}
+    smtp = raw.get("smtp") or {}
     sites = {
         site_id: SiteRecipients(
             _addresses((values or {}).get("to")),
@@ -76,13 +89,22 @@ def load_email_settings(config_dir: Path) -> EmailSettings:
     }
     return EmailSettings(
         enabled=bool(raw.get("enabled", False)),
+        delivery_method=str(raw.get("delivery_method", "gmail_api")).strip().lower(),
         timezone=str(raw.get("timezone", "America/Santiago")),
         send_hour=int(raw.get("send_hour", 4)),
         send_minute=int(raw.get("send_minute", 0)),
         retry_minutes=int(raw.get("retry_minutes", 30)),
         sender_display_name=str(sender.get("display_name", "")),
+        sender_email=str(sender.get("email", sender.get("delegated_user", ""))).strip(),
         delegated_user=str(sender.get("delegated_user", "")).strip(),
         service_account_file=Path(str(sender.get("service_account_file", "/run/secrets/gmail-service-account.json"))),
+        smtp_host=str(smtp.get("host", "smtp.gmail.com")),
+        smtp_port=int(smtp.get("port", 587)),
+        smtp_username=str(smtp.get("username", "")).strip(),
+        smtp_password_env=str(smtp.get("password_env", "GMAIL_APP_PASSWORD")).strip(),
+        smtp_password_file=Path(str(smtp.get("password_file", ""))),
+        smtp_use_starttls=bool(smtp.get("use_starttls", True)),
+        smtp_timeout_seconds=int(smtp.get("timeout_seconds", 30)),
         global_cc=_addresses(raw.get("global_cc")),
         sites=sites,
     )

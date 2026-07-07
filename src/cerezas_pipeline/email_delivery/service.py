@@ -4,7 +4,11 @@ import base64
 import json
 import logging
 import mimetypes
+import os
 import sqlite3
+import smtplib
+import ssl
+from contextlib import suppress
 from datetime import date, datetime, timedelta
 from email.message import EmailMessage
 from email.utils import formataddr
@@ -46,9 +50,10 @@ def build_message(
 ) -> EmailMessage:
     recipients = email_settings.recipients_for(site.site_id)
     template = build_email_template(kind, report_date)
+    sender_email = email_settings.sender_email or email_settings.delegated_user or email_settings.smtp_username
     message = EmailMessage()
     message["Subject"] = template.subject
-    message["From"] = formataddr((email_settings.sender_display_name, email_settings.delegated_user))
+    message["From"] = formataddr((email_settings.sender_display_name, sender_email))
     message["To"] = ", ".join(_formatted(value) for value in recipients.to)
     if recipients.cc:
         message["Cc"] = ", ".join(_formatted(value) for value in recipients.cc)
@@ -82,9 +87,56 @@ def _gmail_service(email_settings: EmailSettings) -> Any:
     return build("gmail", "v1", credentials=credentials, cache_discovery=False)
 
 
-def send_message(service: Any, message: EmailMessage) -> str:
+def _smtp_password(email_settings: EmailSettings) -> str:
+    if email_settings.smtp_password_file and email_settings.smtp_password_file.is_file():
+        return email_settings.smtp_password_file.read_text(encoding="utf-8").strip()
+    if email_settings.smtp_password_env:
+        password = os.environ.get(email_settings.smtp_password_env, "")
+        if password:
+            return password
+    raise RuntimeError(
+        "Configure smtp.password_env o smtp.password_file con el App Password de Gmail"
+    )
+
+
+def _smtp_client(email_settings: EmailSettings) -> smtplib.SMTP:
+    if not email_settings.smtp_username:
+        raise RuntimeError("Configure smtp.username en email.yaml")
+    password = _smtp_password(email_settings)
+    client = smtplib.SMTP(
+        email_settings.smtp_host,
+        email_settings.smtp_port,
+        timeout=email_settings.smtp_timeout_seconds,
+    )
+    try:
+        client.ehlo()
+        if email_settings.smtp_use_starttls:
+            client.starttls(context=ssl.create_default_context())
+            client.ehlo()
+        client.login(email_settings.smtp_username, password)
+    except Exception:
+        with suppress(Exception):
+            client.quit()
+        raise
+    return client
+
+
+def _delivery_client(email_settings: EmailSettings) -> Any:
+    if email_settings.delivery_method == "gmail_api":
+        return _gmail_service(email_settings)
+    if email_settings.delivery_method == "smtp":
+        return _smtp_client(email_settings)
+    raise RuntimeError(
+        f"delivery_method no soportado: {email_settings.delivery_method}. Use gmail_api o smtp."
+    )
+
+
+def send_message(client: Any, message: EmailMessage, delivery_method: str) -> str:
+    if delivery_method == "smtp":
+        client.send_message(message)
+        return "smtp-accepted"
     raw = base64.urlsafe_b64encode(message.as_bytes()).decode("ascii")
-    result = service.users().messages().send(userId="me", body={"raw": raw}).execute()
+    result = client.users().messages().send(userId="me", body={"raw": raw}).execute()
     return str(result["id"])
 
 
@@ -180,7 +232,7 @@ def deliver_kind(
     if not logo.exists():
         raise RuntimeError(f"Falta el logo para correo: {logo}")
     now = datetime.now(ZoneInfo(email_settings.timezone))
-    service = None
+    delivery_client = None
     results: list[dict[str, Any]] = []
     store = EmailDeliveryStore(settings.data_root / "state" / "scheduler.db")
     try:
@@ -208,14 +260,22 @@ def deliver_kind(
                 )
                 continue
             try:
-                service = service or _gmail_service(email_settings)
-                message_id = send_message(service, message)
+                delivery_client = delivery_client or _delivery_client(email_settings)
+                message_id = send_message(delivery_client, message, email_settings.delivery_method)
                 store.mark(scheduled_date, kind, site.site_id, "complete", now, message_id=message_id)
-                results.append({"site": site.site_id, "status": "sent", "gmail_message_id": message_id})
+                results.append({
+                    "site": site.site_id,
+                    "status": "sent",
+                    "delivery_method": email_settings.delivery_method,
+                    "message_id": message_id,
+                })
             except Exception as error:
                 store.mark(scheduled_date, kind, site.site_id, "failed", now, error=str(error))
                 LOGGER.exception("Falló el correo %s %s", kind.value, site.site_id)
                 results.append({"site": site.site_id, "status": "failed", "error": str(error)})
     finally:
+        if isinstance(delivery_client, smtplib.SMTP):
+            with suppress(Exception):
+                delivery_client.quit()
         store.close()
     return results

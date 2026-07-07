@@ -1,4 +1,6 @@
 enabled: false
+# Options: gmail_api or smtp.
+delivery_method: gmail_api
 timezone: America/Santiago
 send_hour: 4
 send_minute: 0
@@ -6,8 +8,22 @@ retry_minutes: 30
 
 sender:
   display_name: Universidad de O'Higgins - Proyecto FIC Cerezas
+  # Sender address used in the From header. For gmail_api, this is usually the same as delegated_user.
+  email: ""
   delegated_user: ""
   service_account_file: /run/secrets/gmail-service-account.json
+
+# Alternative delivery method: SMTP + Gmail App Password.
+# To use it, set delivery_method: smtp, configure sender.email and smtp.username,
+# and provide the password through the GMAIL_APP_PASSWORD environment variable.
+smtp:
+  host: smtp.gmail.com
+  port: 587
+  username: ""
+  password_env: GMAIL_APP_PASSWORD
+  password_file: ""
+  use_starttls: true
+  timeout_seconds: 30
 
 global_cc:
   - name: Daniel Casagrande
@@ -32,4 +48,3 @@ sites:
   fic2-rengo-elperal: {to: [], cc: []}
   fic2-rengo-eltotoral: {to: [], cc: []}
   fic2-sanfernando-liceoagricola: {to: [], cc: []}
-
